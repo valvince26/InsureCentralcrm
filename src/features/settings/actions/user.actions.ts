@@ -49,6 +49,7 @@ export async function updateUserRole(userId: string, newRole: "SUPER_ADMIN" | "M
     });
     
     revalidatePath("/settings");
+    revalidatePath("/team");
     return { success: true };
   } catch (error: any) {
     console.error("Error updating user role:", error);
@@ -86,6 +87,7 @@ export async function inviteUser(email: string, firstName: string, lastName: str
     });
 
     revalidatePath("/settings");
+    revalidatePath("/team");
     return { success: true };
   } catch (error: any) {
     console.error("Error inviting user:", error);
@@ -113,9 +115,37 @@ export async function updateUser(userId: string, data: { firstName: string, last
     });
 
     revalidatePath("/settings");
+    revalidatePath("/team");
     return { success: true };
   } catch (error: any) {
     console.error("Error updating user:", error);
     throw new Error(error.message || "Failed to update user");
+  }
+}
+
+export async function deleteUser(userId: string) {
+  try {
+    const admin = await getAuthUser();
+    if (admin.role !== "SUPER_ADMIN") {
+      throw new Error("Only Super Admins can delete users");
+    }
+
+    if (admin.id === userId) {
+      throw new Error("You cannot delete your own account");
+    }
+
+    await prisma.user.delete({
+      where: { 
+        id: userId,
+        organizationId: admin.organizationId
+      }
+    });
+
+    revalidatePath("/settings");
+    revalidatePath("/team");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error deleting user:", error);
+    throw new Error(error.message || "Failed to delete user");
   }
 }

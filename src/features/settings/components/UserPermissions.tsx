@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { getOrganizationUsers, updateUserRole } from "../actions/user.actions";
+import React, { useState, useEffect, useTransition } from "react";
+import { getOrganizationUsers, updateUserRole, deleteUser } from "../actions/user.actions";
 import InviteUserModal from "./InviteUserModal";
 import EditUserModal from "./EditUserModal";
 
@@ -10,6 +10,7 @@ export default function UserPermissions() {
   const [users, setUsers] = useState<any[]>([]);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     getOrganizationUsers().then((data) => {
@@ -26,6 +27,19 @@ export default function UserPermissions() {
     } catch (err: any) {
       alert(err.message);
     }
+  };
+
+  const handleDeleteUser = (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) return;
+    
+    startTransition(async () => {
+      try {
+        await deleteUser(userId);
+        setUsers(users.filter(u => u.id !== userId));
+      } catch (err: any) {
+        alert(err.message);
+      }
+    });
   };
 
   if (loading) {
@@ -86,7 +100,16 @@ export default function UserPermissions() {
                   {user.team?.name || "Unassigned"}
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button onClick={() => setEditingUser(user)} className="text-primary hover:text-primary/80 font-label-sm cursor-pointer">Edit</button>
+                  <div className="flex justify-end items-center gap-3">
+                    <button onClick={() => setEditingUser(user)} className="text-primary hover:text-primary/80 font-label-sm cursor-pointer">Edit</button>
+                    <button 
+                      onClick={() => handleDeleteUser(user.id, `${user.firstName} ${user.lastName}`)} 
+                      className="text-error hover:text-error/80 font-label-sm cursor-pointer disabled:opacity-50"
+                      disabled={isPending}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

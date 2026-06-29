@@ -5,6 +5,8 @@ import TeamTableControls from "@/features/team/components/TeamTableControls";
 import TeamTable from "@/features/team/components/TeamTable";
 import TeamPagination from "@/features/team/components/TeamPagination";
 
+export const dynamic = "force-dynamic";
+
 export default function TeamPage() {
   return (
     <div className="p-8 max-w-[1440px] mx-auto w-full">

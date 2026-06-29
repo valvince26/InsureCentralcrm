@@ -15,7 +15,7 @@ export default function CallTranscriptCard() {
             <span className="text-[10px] text-on-surface-variant">00:12</span>
           </div>
           <p className="text-body-md text-on-surface leading-relaxed p-3 bg-primary-fixed/30 rounded-r-xl rounded-bl-xl">
-            Thank you for calling InsureFlow Support. My name is Sarah. Am I speaking with Mrs. Johnson today?
+            Thank you for calling InsureCentral Support. My name is Sarah. Am I speaking with Mrs. Johnson today?
           </p>
         </div>
         {/* Speaker: Customer */}

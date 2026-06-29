@@ -13,8 +13,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "InsureFlow CRM Admin Dashboard",
-  description: "Enterprise CRM Admin Dashboard",
+  title: "InsureCentral — Operations Platform",
+  description: "InsureCentral CRM & Operations — Still OS Digital Holdings",
 };
 
 export default function RootLayout({

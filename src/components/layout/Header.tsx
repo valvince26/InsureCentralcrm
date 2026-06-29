@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 export default function Header() {
   const pathname = usePathname();
   const isDialer = pathname === "/power-dialer";
-  
+
   const [sessionSeconds, setSessionSeconds] = useState(5085);
 
   useEffect(() => {
@@ -29,10 +29,10 @@ export default function Header() {
       <div className="flex items-center flex-1 max-w-xl">
         <div className="relative w-full max-w-[400px]">
           <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
-          <input 
-            className="w-full bg-surface-container-low border-none rounded-full pl-10 pr-4 py-2 text-body-md focus:ring-2 focus:ring-primary/20 transition-all focus:outline-none" 
-            placeholder={isDialer ? "Search leads, campaigns or scripts... (⌘K)" : "Search tasks, contacts, or claims (⌘K)"} 
-            type="text" 
+          <input
+            className="w-full bg-surface-container-low border-none rounded-full pl-10 pr-4 py-2 text-body-md focus:ring-2 focus:ring-primary/20 transition-all focus:outline-none"
+            placeholder={isDialer ? "Search leads, campaigns or scripts... (⌘K)" : "Search tasks, contacts, or claims (⌘K)"}
+            type="text"
           />
         </div>
         {isDialer && (
@@ -42,7 +42,7 @@ export default function Header() {
           </div>
         )}
       </div>
-      
+
       <div className="flex items-center space-x-4">
         <button className="p-2 text-on-surface-variant hover:text-primary transition-all duration-200 cursor-pointer relative">
           <span className="material-symbols-outlined">notifications</span>
@@ -51,11 +51,21 @@ export default function Header() {
         <button className="p-2 text-on-surface-variant hover:text-primary transition-all duration-200 cursor-pointer">
           <span className="material-symbols-outlined">help_outline</span>
         </button>
-        
-        {isDialer && (
+
+        {isDialer ? (
           <div className="flex items-center gap-2 bg-secondary-container px-3 py-1.5 rounded-lg">
             <span className="material-symbols-outlined text-on-secondary-container" style={{ fontVariationSettings: "'FILL' 1" }}>timer</span>
             <span className="font-code-md text-code-md font-bold text-on-secondary-container">{formatTimer(sessionSeconds)}</span>
+          </div>
+        ) : (
+          <div className="flex items-center ml-2 pl-4 border-l border-outline-variant">
+            <span className="mr-3 text-right hidden sm:block">
+              <p className="text-body-md font-bold leading-none">Marcus Still</p>
+              <p className="text-label-md text-on-surface-variant leading-none mt-1">Founder & CEO</p>
+            </span>
+            <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold text-xs cursor-pointer">
+              MS
+            </div>
           </div>
         )}
       </div>

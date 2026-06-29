@@ -45,8 +45,8 @@ export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 h-screen w-[260px] bg-surface-dim dark:bg-inverse-surface flex flex-col py-4 z-50 border-r border-outline-variant/30">
       <div className="px-6 mb-8">
-        <h1 className="text-title-lg font-title-lg font-bold text-on-primary-fixed dark:text-primary-fixed-dim">InsureFlow CRM</h1>
-        <p className="text-label-md font-label-md text-on-surface-variant/70 uppercase tracking-wider mt-1">Enterprise Edition</p>
+        <h1 className="text-title-lg font-title-lg font-bold text-on-primary-fixed dark:text-primary-fixed-dim">InsureCentral</h1>
+        <p className="text-label-md font-label-md text-on-surface-variant/70 uppercase tracking-wider mt-1">◆ Still OS™ Platform</p>
       </div>
       
       <nav className="flex-1 overflow-y-auto sidebar-scroll px-3 space-y-1">

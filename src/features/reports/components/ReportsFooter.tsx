@@ -12,7 +12,7 @@ export default function ReportsFooter() {
       <div className="flex gap-6">
         <a className="hover:text-primary transition-colors cursor-pointer" href="#">Documentation</a>
         <a className="hover:text-primary transition-colors cursor-pointer" href="#">API Status</a>
-        <span>© 2023 InsureFlow Enterprise</span>
+        <span>© 2026 InsureCentral — Still OS Digital Holdings</span>
       </div>
     </footer>
   );

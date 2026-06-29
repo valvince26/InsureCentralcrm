@@ -16,8 +16,8 @@ export default function LoginPage() {
               verified_user
             </span>
           </div>
-          <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight">InsureFlow</h1>
-          <p className="font-body-md text-body-md text-on-surface-variant mt-1">Enterprise CRM Portal</p>
+          <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight">InsureCentral</h1>
+          <p className="font-body-md text-body-md text-on-surface-variant mt-1">◆ Still OS™ Operations Platform</p>
         </header>
 
         {/* Form: Login Card */}

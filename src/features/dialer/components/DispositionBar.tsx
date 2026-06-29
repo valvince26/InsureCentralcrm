@@ -23,9 +23,9 @@ export default function DispositionBar() {
       alert("Please select a disposition first.");
       return;
     }
-    // In a real app, we'd log the call with the specific disposition string
-    // Here we just advance the queue.
-    nextLead(activeDisp === "no-answer" || activeDisp === "voicemail" ? "Requeued" : "Completed");
+    
+    const queueAction = activeDisp === "no-answer" || activeDisp === "voicemail" ? "Requeued" : "Completed";
+    nextLead(activeDisp, queueAction);
     setActiveDisp(null);
   };
 

@@ -1,49 +1,16 @@
 import React from "react";
 
-export default function TopPerformingAgents() {
-  const agents = [
+export default function TopPerformingAgents({ agents }: { agents?: any[] }) {
+  const tableData = agents?.length ? agents : [
     {
+      id: "mock1",
       initials: "ML",
       bg: "bg-primary-fixed-dim text-on-primary-fixed",
-      name: "Marcus Lowery",
-      role: "Lvl 4 Senior Agent",
-      calls: "1,402",
-      transfers: "241",
-      revenue: "$142,500",
+      name: "Marcus Lowery (Mock)",
+      callsMade: "1,402",
+      conversionRate: "12.4%",
+      talkTime: "142m",
       growth: "+12.4%",
-      growthColor: "text-[#006a6a] bg-secondary-container/20"
-    },
-    {
-      initials: "AV",
-      bg: "bg-secondary-fixed text-on-secondary-fixed",
-      name: "Anita Vance",
-      role: "Closing Specialist",
-      calls: "1,288",
-      transfers: "312",
-      revenue: "$128,400",
-      growth: "+8.2%",
-      growthColor: "text-[#006a6a] bg-secondary-container/20"
-    },
-    {
-      initials: "JH",
-      bg: "bg-tertiary-fixed-dim text-on-tertiary-fixed",
-      name: "James Holt",
-      role: "New Business",
-      calls: "1,105",
-      transfers: "184",
-      revenue: "$94,200",
-      growth: "-2.4%",
-      growthColor: "text-error bg-error-container/20"
-    },
-    {
-      initials: "RK",
-      bg: "bg-on-primary-fixed-variant text-primary-fixed",
-      name: "Riley Kim",
-      role: "Senior Broker",
-      calls: "982",
-      transfers: "152",
-      revenue: "$82,150",
-      growth: "+4.1%",
       growthColor: "text-[#006a6a] bg-secondary-container/20"
     }
   ];
@@ -62,29 +29,25 @@ export default function TopPerformingAgents() {
             <tr>
               <th className="px-6 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider">Agent</th>
               <th className="px-6 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider text-right">Total Calls</th>
-              <th className="px-6 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider text-right">Transfers</th>
-              <th className="px-6 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider text-right">Revenue</th>
-              <th className="px-6 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider text-center">Growth</th>
+              <th className="px-6 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider text-right">Talk Time</th>
+              <th className="px-6 py-3 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider text-right">Conversion</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/20">
-            {agents.map((agent, i) => (
-              <tr key={i} className="hover:bg-surface-container-low transition-colors group cursor-pointer">
+            {tableData.map((agent, i) => (
+              <tr key={agent.id || i} className="hover:bg-surface-container-low transition-colors group cursor-pointer">
                 <td className="px-6 py-4 flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-full ${agent.bg} text-[10px] flex items-center justify-center font-bold`}>
-                    {agent.initials}
+                  <div className={`w-8 h-8 rounded-full ${agent.bg || 'bg-primary-container text-on-primary-container'} text-[10px] flex items-center justify-center font-bold uppercase`}>
+                    {agent.initials || agent.name.substring(0, 2)}
                   </div>
                   <div>
                     <p className="text-body-md font-medium">{agent.name}</p>
-                    <p className="text-[11px] text-on-surface-variant">{agent.role}</p>
+                    <p className="text-[11px] text-on-surface-variant">Agent</p>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-right text-body-md font-medium">{agent.calls}</td>
-                <td className="px-6 py-4 text-right text-body-md">{agent.transfers}</td>
-                <td className="px-6 py-4 text-right text-body-md font-bold">{agent.revenue}</td>
-                <td className="px-6 py-4 text-center">
-                  <span className={`${agent.growthColor} px-2 py-0.5 rounded text-[11px]`}>{agent.growth}</span>
-                </td>
+                <td className="px-6 py-4 text-right text-body-md font-medium">{agent.callsMade}</td>
+                <td className="px-6 py-4 text-right text-body-md">{agent.talkTime}</td>
+                <td className="px-6 py-4 text-right text-body-md font-bold text-secondary">{agent.conversionRate}</td>
               </tr>
             ))}
           </tbody>

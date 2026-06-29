@@ -4,7 +4,7 @@ import React from "react";
 import { useDialer } from "../context/DialerContext";
 
 export default function ActiveCallCard() {
-  const { activeItem, callState, setCallState } = useDialer();
+  const { activeItem, callState, setCallState, callDuration } = useDialer();
 
   if (!activeItem) {
     return (
@@ -21,6 +21,7 @@ export default function ActiveCallCard() {
   const contact = activeItem.contact;
   const isRinging = callState === "ringing";
   const isConnected = callState === "connected";
+  const isWrapUp = callState === "wrap_up";
 
   const handleCall = () => {
     if (callState === "idle") setCallState("ringing");
@@ -31,20 +32,34 @@ export default function ActiveCallCard() {
     setCallState("wrap_up");
   };
 
+  const formatDuration = (secs: number) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
+
   return (
     <div className="bg-white border border-outline-variant rounded-2xl p-10 shadow-sm relative overflow-hidden">
       <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-3xl"></div>
       
       <div className="relative z-10 flex flex-col items-center text-center">
-        <div className={`w-24 h-24 bg-surface-container rounded-full mb-6 flex items-center justify-center border-4 border-white shadow-md transition-all ${isRinging ? 'animate-pulse bg-primary/20' : ''}`}>
+        <div className={`w-24 h-24 bg-surface-container rounded-full mb-6 flex items-center justify-center border-4 border-white shadow-md transition-all ${isRinging ? 'animate-pulse bg-primary/20' : isConnected ? 'border-primary ring-4 ring-primary/20' : ''}`}>
           <span className="font-display-lg text-display-lg text-primary-container">
             {contact.firstName?.charAt(0) || "U"}{contact.lastName?.charAt(0) || ""}
           </span>
         </div>
         <h2 className="font-display-lg text-display-lg text-on-surface mb-2">{contact.firstName} {contact.lastName}</h2>
-        <p className="font-title-lg text-title-lg text-on-surface-variant mb-6 tracking-tight">
-          {contact.phone || "No Phone Number"}
-        </p>
+        
+        <div className="flex items-center gap-3 justify-center mb-6">
+          <p className="font-title-lg text-title-lg text-on-surface-variant tracking-tight">
+            {contact.phone || "No Phone Number"}
+          </p>
+          {(isConnected || isWrapUp) && (
+            <span className={`px-3 py-1 text-label-md font-mono rounded-full border ${isWrapUp ? 'bg-surface-container text-on-surface-variant border-outline-variant' : 'bg-primary/10 text-primary border-primary/20 animate-pulse'}`}>
+              {formatDuration(callDuration)}
+            </span>
+          )}
+        </div>
         
         <div className="flex flex-wrap justify-center gap-4 mb-10">
           {contact.state && (

@@ -2,12 +2,27 @@
 
 import React from "react";
 
-export default function CampaignTable() {
-  const campaigns = [
+export default function CampaignTable({ campaigns }: { campaigns: any[] }) {
+  const tableData = campaigns?.length > 0 ? campaigns.map(c => ({
+    id: c.id,
+    name: c.name,
+    lastUpdated: new Date(c.updatedAt || Date.now()).toLocaleDateString(),
+    status: c.status,
+    statusBg: c.status === "Active" ? "bg-secondary-container text-on-secondary-container border-secondary/20" : "bg-surface-container-high text-on-surface-variant border-outline-variant",
+    dotBg: c.status === "Active" ? "bg-secondary animate-pulse" : "bg-outline",
+    leads: c._count?.contacts?.toLocaleString() || "0",
+    duration: "Active", // Mock 
+    conv: "0%", // Mock
+    convTrend: "horizontal_rule",
+    convColor: "text-on-surface-variant",
+    agents: 0,
+    agentColor: "text-on-surface-variant/40",
+    agentDot: "bg-outline-variant"
+  })) : [
     {
-      id: "1",
-      name: "Q4 Life Insurance Bundle",
-      lastUpdated: "Last updated 2h ago",
+      id: "mock1",
+      name: "Q4 Life Insurance Bundle (Mock)",
+      lastUpdated: "Just now",
       status: "Active",
       statusBg: "bg-secondary-container text-on-secondary-container border-secondary/20",
       dotBg: "bg-secondary animate-pulse",
@@ -17,54 +32,8 @@ export default function CampaignTable() {
       convTrend: "trending_up",
       convColor: "text-secondary",
       agents: 12,
+      agentColor: "",
       agentDot: "bg-secondary"
-    },
-    {
-      id: "2",
-      name: "Home Bundle Renewals - SE Region",
-      lastUpdated: "Manual outreach sequence",
-      status: "Paused",
-      statusBg: "bg-surface-container-high text-on-surface-variant border-outline-variant",
-      dotBg: "bg-outline",
-      leads: "1,280",
-      duration: "42h 08m",
-      conv: "3.1%",
-      convTrend: "trending_down",
-      convColor: "text-error",
-      agents: 0,
-      agentColor: "text-on-surface-variant/40",
-      agentDot: "bg-outline-variant"
-    },
-    {
-      id: "3",
-      name: "Auto Insurance Cold Lead Blitz",
-      lastUpdated: "Triggered by web form fill",
-      status: "Active",
-      statusBg: "bg-secondary-container text-on-secondary-container border-secondary/20",
-      dotBg: "bg-secondary animate-pulse",
-      leads: "8,105",
-      duration: "512h 45m",
-      conv: "6.8%",
-      convTrend: "trending_up",
-      convColor: "text-secondary",
-      agents: 24,
-      agentDot: "bg-secondary"
-    },
-    {
-      id: "4",
-      name: "Medicare Advantage Open Enrollment",
-      lastUpdated: "Legacy list reactivation",
-      status: "Completed",
-      statusBg: "bg-surface-container-high text-on-surface-variant border-outline-variant",
-      dotBg: "bg-outline",
-      leads: "2,440",
-      duration: "18h 33m",
-      conv: "1.2%",
-      convTrend: "horizontal_rule",
-      convColor: "text-on-surface-variant",
-      agents: 0,
-      agentColor: "text-on-surface-variant/40",
-      agentDot: "bg-outline-variant"
     }
   ];
 
@@ -98,7 +67,7 @@ export default function CampaignTable() {
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/50">
-            {campaigns.map((camp) => (
+            {tableData.map((camp) => (
               <tr key={camp.id} className="campaign-row transition-colors group hover:bg-primary/5 cursor-pointer">
                 <td className="px-6 py-5">
                   <div className="flex flex-col">

@@ -6,22 +6,30 @@ import LeadSourcePerformance from "@/features/reports/components/LeadSourcePerfo
 import TopPerformingAgents from "@/features/reports/components/TopPerformingAgents";
 import ReportsFooter from "@/features/reports/components/ReportsFooter";
 import ReportsFAB from "@/features/reports/components/ReportsFAB";
+import { getReportMetrics } from "@/features/reports/actions/reports.actions";
 
-export default function ReportsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ReportsPage() {
+  const metrics = await getReportMetrics();
+
   return (
-    <div className="p-8 max-w-[1440px] mx-auto w-full">
+    <div className="p-8 space-y-6 max-w-[1440px] mx-auto w-full pb-24">
       <ReportsHeader />
-      <ReportsKPIs />
       
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      {/* Top Level KPIs */}
+      <ReportsKPIs kpis={metrics.kpis} />
+
+      {/* Main Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <ConversionTrendsChart />
         <DispositionPieChart />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      {/* Secondary Data Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <LeadSourcePerformance />
-        <TopPerformingAgents />
+        <TopPerformingAgents agents={metrics.topAgents} />
       </div>
 
       <ReportsFooter />

@@ -46,10 +46,10 @@ export async function GET(request: Request) {
         })
       }
       
-      return NextResponse.redirect(`${origin}/`)
+      return NextResponse.redirect(new URL('/', request.url))
     }
   }
 
   // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/login?error=true`)
+  return NextResponse.redirect(new URL('/login?error=true', request.url))
 }

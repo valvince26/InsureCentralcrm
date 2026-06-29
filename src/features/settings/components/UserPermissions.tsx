@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getOrganizationUsers, updateUserRole } from "../actions/user.actions";
+import { getOrganizationUsers, updateUserRole, inviteUser } from "../actions/user.actions";
 
 export default function UserPermissions() {
   const [loading, setLoading] = useState(true);
@@ -24,6 +24,24 @@ export default function UserPermissions() {
     }
   };
 
+  const handleInviteUser = async () => {
+    const email = prompt("Enter the email address of the user you want to invite:");
+    if (!email) return;
+    
+    const firstName = prompt("Enter their first name:") || "New";
+    const lastName = prompt("Enter their last name:") || "User";
+    
+    try {
+      await inviteUser(email, firstName, lastName, "AGENT");
+      alert(`Successfully invited ${email}! They will be added to the team once they sign in.`);
+      // Refresh the list
+      const data = await getOrganizationUsers();
+      setUsers(data);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-center text-on-surface-variant">Loading users...</div>;
   }
@@ -35,7 +53,7 @@ export default function UserPermissions() {
           <h2 className="text-title-md font-bold text-on-surface">Users & Permissions</h2>
           <p className="text-body-sm text-on-surface-variant mt-1">Manage team members and their access levels.</p>
         </div>
-        <button className="bg-primary hover:bg-primary/90 text-on-primary font-label-md px-4 py-2 rounded-lg transition-colors">
+        <button onClick={handleInviteUser} className="bg-primary hover:bg-primary/90 text-on-primary font-label-md px-4 py-2 rounded-lg transition-colors cursor-pointer">
           Invite User
         </button>
       </div>

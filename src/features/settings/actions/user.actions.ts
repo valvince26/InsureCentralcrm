@@ -55,3 +55,40 @@ export async function updateUserRole(userId: string, newRole: "SUPER_ADMIN" | "M
     throw new Error(error.message || "Failed to update role");
   }
 }
+
+export async function inviteUser(email: string, firstName: string, lastName: string, role: "SUPER_ADMIN" | "MANAGER" | "AGENT") {
+  try {
+    const admin = await getAuthUser();
+    if (admin.role !== "SUPER_ADMIN" && admin.role !== "MANAGER") {
+      throw new Error("You do not have permission to invite users");
+    }
+
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      throw new Error("User with this email already exists");
+    }
+
+    // Create placeholder user
+    await prisma.user.create({
+      data: {
+        email,
+        firstName,
+        lastName,
+        role,
+        organizationId: admin.organizationId,
+        clerkId: `invited_${Date.now()}_${Math.random().toString(36).substring(7)}`, // Temporary ID until they sign in
+        isActive: false // Mark as inactive until they sign in
+      }
+    });
+
+    revalidatePath("/settings");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error inviting user:", error);
+    throw new Error(error.message || "Failed to invite user");
+  }
+}

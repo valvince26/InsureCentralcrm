@@ -1,21 +1,12 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { useCrmStore } from "@/store/crmStore";
 
 export default function ContactsPagination() {
-  const { contacts, filters, page, rowsPerPage, setPage, setRowsPerPage } = useCrmStore();
+  const { totalFromAPI, page, rowsPerPage, setPage, setRowsPerPage } = useCrmStore();
 
-  const filteredContacts = useMemo(() => {
-    return contacts.filter((c) => {
-      if (filters.state !== "All States" && c.state !== filters.state) return false;
-      if (filters.owner !== "All Owners" && c.ownerName !== filters.owner) return false;
-      if (filters.campaign !== "All Campaigns" && c.campaign !== filters.campaign) return false;
-      return true;
-    });
-  }, [contacts, filters]);
-
-  const totalContacts = filteredContacts.length;
+  const totalContacts = totalFromAPI;
   const totalPages = Math.max(1, Math.ceil(totalContacts / rowsPerPage));
   
   const startIdx = totalContacts === 0 ? 0 : (page - 1) * rowsPerPage + 1;

@@ -48,6 +48,10 @@ interface CrmState {
   rowsPerPage: number;
   setPage: (page: number) => void;
   setRowsPerPage: (rows: number) => void;
+
+  // API total (server-side count, not in-memory array length)
+  totalFromAPI: number;
+  setTotalFromAPI: (total: number) => void;
 }
 
 const initialContacts: Contact[] = [
@@ -171,6 +175,8 @@ export const useCrmStore = create<CrmState>()(
       filters: { state: "All States", owner: "All Owners", campaign: "All Campaigns" },
       page: 1,
       rowsPerPage: 10,
+      totalFromAPI: 0,
+      setTotalFromAPI: (totalFromAPI) => set({ totalFromAPI }),
       
       addContact: (contact) => 
         set((state) => ({ contacts: [contact, ...state.contacts] })),

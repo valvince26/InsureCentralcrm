@@ -1,35 +1,19 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { useCrmStore } from "@/store/crmStore";
 
 export default function ContactsTable() {
-  const { contacts, filters, page, rowsPerPage, selectedIds, toggleSelection, selectAll, clearSelection, setPage } = useCrmStore();
+  const { contacts, selectedIds, toggleSelection, selectAll, clearSelection } = useCrmStore();
 
-  // 1. Apply Filters
-  const filteredContacts = useMemo(() => {
-    return contacts.filter((c) => {
-      if (filters.state !== "All States" && c.state !== filters.state) return false;
-      if (filters.owner !== "All Owners" && c.ownerName !== filters.owner) return false;
-      if (filters.campaign !== "All Campaigns" && c.campaign !== filters.campaign) return false;
-      return true;
-    });
-  }, [contacts, filters]);
-
-  // 2. Apply Pagination
-  const paginatedContacts = useMemo(() => {
-    const startIndex = (page - 1) * rowsPerPage;
-    return filteredContacts.slice(startIndex, startIndex + rowsPerPage);
-  }, [filteredContacts, page, rowsPerPage]);
-
-  const totalPages = Math.ceil(filteredContacts.length / rowsPerPage);
-  const allOnPageSelected = paginatedContacts.length > 0 && paginatedContacts.every((c) => selectedIds.includes(c.id));
+  // Contacts from store are already the current API page — no client-side slicing
+  const allOnPageSelected = contacts.length > 0 && contacts.every((c) => selectedIds.includes(c.id));
 
   const handleSelectAll = () => {
     if (allOnPageSelected) {
       clearSelection();
     } else {
-      selectAll(filteredContacts.map(c => c.id));
+      selectAll(contacts.map(c => c.id));
     }
   };
 
@@ -67,18 +51,18 @@ export default function ContactsTable() {
           </tr>
         </thead>
         <tbody className="divide-y divide-outline-variant">
-          {paginatedContacts.length === 0 ? (
+          {contacts.length === 0 ? (
             <tr>
               <td colSpan={12} className="py-8 text-center text-on-surface-variant">
                 No contacts found matching the filters.
               </td>
             </tr>
           ) : (
-            paginatedContacts.map((c) => (
+            contacts.map((c) => (
               <tr 
                 key={c.id} 
                 onClick={(e) => handleRowClick(e, c.id)} 
-                className={`transition-colors group cursor-pointer ${selectedIds.includes(c.id) ? "bg-primary-container/20" : "hover:bg-surface-container-lowest"}`}
+                className={`transition-colors group cursor-pointer ${selectedIds.includes(c.id) ? 'bg-primary-container/20' : 'hover:bg-surface-container-lowest'}`}
               >
                 <td className="py-4 px-4">
                   <input 

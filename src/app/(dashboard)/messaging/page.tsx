@@ -8,9 +8,10 @@ import { getConversations } from "@/features/messaging/actions/messaging.actions
 
 export const dynamic = "force-dynamic";
 
-export default async function MessagingPage({ searchParams }: { searchParams: { c?: string } }) {
+export default async function MessagingPage({ searchParams }: { searchParams: Promise<{ c?: string }> }) {
+  const params = await searchParams;
   const conversations = await getConversations();
-  const activeConvId = searchParams.c || (conversations.length > 0 ? conversations[0].id : null);
+  const activeConvId = params.c || (conversations.length > 0 ? conversations[0].id : null);
   
   const activeConversation = conversations.find((c: any) => c.id === activeConvId);
 

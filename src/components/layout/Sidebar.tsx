@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 
 const navItems = [
   { href: "/", icon: "dashboard", label: "Dashboard" },
@@ -24,6 +25,22 @@ const bottomNavItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user);
+    };
+    getUser();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[260px] bg-surface-dim dark:bg-inverse-surface flex flex-col py-4 z-50 border-r border-outline-variant/30">
@@ -72,14 +89,23 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      <div className="mt-auto px-6 pt-4 border-t border-outline-variant/20 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-primary-fixed overflow-hidden">
-          <img className="w-full h-full object-cover" alt="Alex Sterling" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIeSMrwTec5w5McyK8q3J7dVthdWttRShKPkemsUgg7KecorVQemKFtB0-2UnJMa7bFR97YJrQtuSm2U5XsoarellDTkw1F3yvsqlkZobxFlqlLnggWUfxwKa29xYl4UUfuA-H8bxtUkBjoSdTi53P-WXdYqstwdUfroVcs-FX-bF1CRmcZXk6mvPxlPxP0rLg2-5YhRdcoYg8qZ4LKUzwpSwWOkXK7pHiWBPIfOHuBoKKi8yd-Qp8C7yD9ga_CpSynzdzn4mHgs6l" />
+      <div className="mt-auto px-6 pt-4 border-t border-outline-variant/20 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 overflow-hidden">
+          <div className="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center text-on-primary-fixed font-bold overflow-hidden shrink-0">
+            {user?.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              user?.email?.charAt(0).toUpperCase() || "A"
+            )}
+          </div>
+          <div className="overflow-hidden">
+            <p className="text-label-md font-bold truncate">{user?.user_metadata?.full_name || "Agent"}</p>
+            <p className="text-[10px] text-on-surface-variant truncate">{user?.email || "Loading..."}</p>
+          </div>
         </div>
-        <div className="overflow-hidden">
-          <p className="text-label-md font-bold truncate">Alex Sterling</p>
-          <p className="text-[10px] text-on-surface-variant truncate">Premium Account Mgr</p>
-        </div>
+        <button onClick={handleLogout} className="text-on-surface-variant hover:text-error transition-colors p-1" title="Sign Out">
+          <span className="material-symbols-outlined text-[20px]">logout</span>
+        </button>
       </div>
     </aside>
   );

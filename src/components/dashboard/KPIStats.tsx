@@ -1,9 +1,17 @@
+"use client";
+
 import React from "react";
+import { useCrmStore } from "@/store/crmStore";
 
 export default function KPIStats() {
+  const contacts = useCrmStore((state) => state.contacts);
+  
+  const totalContacts = contacts.length;
+  const newLeads = contacts.filter(c => c.status === "New Lead" || c.status === "Imported").length;
+
   const kpis = [
-    { label: "Today's Calls", value: "842", change: "+12%", changeType: "positive", colorClass: "text-primary" },
-    { label: "Connected", value: "312", change: "+5%", changeType: "positive", colorClass: "text-primary" },
+    { label: "Total Contacts", value: totalContacts.toString(), change: "+3", changeType: "positive", colorClass: "text-primary" },
+    { label: "New Leads", value: newLeads.toString(), change: "+5%", changeType: "positive", colorClass: "text-primary" },
     { label: "Transfers", value: "48", change: "-2%", changeType: "negative", colorClass: "text-primary" },
     { label: "Conv. Rate", value: "5.8%", change: "+0.4", changeType: "positive", colorClass: "text-secondary" },
     { label: "Avg Talk", value: "4:12", change: "Stable", changeType: "neutral", colorClass: "text-primary" },

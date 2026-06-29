@@ -41,6 +41,8 @@ model Organization {
   opportunities   Opportunity[]
   conversations   Conversation[]
   messages        Message[]
+  emailThreads    EmailThread[]
+  emailMessages   EmailMessage[]
 }
 
 enum UserRole {
@@ -77,6 +79,7 @@ model User {
   notifications    Notification[]
   auditLogs        AuditLog[]
   conversations    Conversation[]
+  emailThreads     EmailThread[]
 }
 
 model Team {
@@ -153,6 +156,7 @@ model Contact {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   conversations Conversation[]
+  emailThreads  EmailThread[]
 
   @@index([organizationId, isDeleted])
   @@index([assignedUserId])
@@ -516,38 +520,38 @@ model Message {
 // -----------------------------------------------------------------------------
 
 model EmailThread {
-  id             String       @id @default(uuid())
-  subject        String
-  status         String       @default("Inbox") // Inbox, Sent, Archived, Trash
+  id      String @id @default(uuid())
+  subject String
+  status  String @default("Inbox") // Inbox, Sent, Archived, Trash
 
-  contactId      String
-  contact        Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId String
+  contact   Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
 
-  userId         String
-  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  emails         EmailMessage[]
+  emails EmailMessage[]
 
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-  lastActivityAt DateTime     @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  lastActivityAt DateTime @default(now())
 }
 
 model EmailMessage {
-  id             String       @id @default(uuid())
-  from           String
-  to             String
-  body           String
-  direction      String       // Inbound, Outbound
+  id        String @id @default(uuid())
+  from      String
+  to        String
+  body      String
+  direction String // Inbound, Outbound
 
-  threadId       String
-  thread         EmailThread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  threadId String
+  thread   EmailThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
-  createdAt      DateTime     @default(now())
+  createdAt DateTime @default(now())
 }

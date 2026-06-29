@@ -9,6 +9,7 @@ const navItems = [
   { href: "/", icon: "dashboard", label: "Dashboard" },
   { href: "/contacts", icon: "contacts", label: "Contacts" },
   { href: "/messaging", icon: "forum", label: "Messaging" },
+  { href: "/email", icon: "mail", label: "Email" },
   { href: "/auto-queue", icon: "queue_play_next", label: "Auto Queue" },
   { href: "/power-dialer", icon: "call", label: "Power Dialer" },
   { href: "/campaigns", icon: "campaign", label: "Campaigns" },

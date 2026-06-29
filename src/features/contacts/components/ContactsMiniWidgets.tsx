@@ -1,37 +1,46 @@
+"use client";
+
 import React from "react";
+import { useStillOSStats } from "@/hooks/useStillOS";
 
 export default function ContactsMiniWidgets() {
+  const { stats, loading } = useStillOSStats();
+
+  const conversionRate = stats
+    ? ((stats.expected_policies / Math.max(stats.contacts, 1)) * 100).toFixed(1) + '%'
+    : '—';
+
   const widgets = [
     {
-      title: "Today's Calls",
-      value: "42",
+      title: "Outbound Sends",
+      value: loading ? '…' : (stats?.outbound_sends ?? 0).toLocaleString(),
       icon: "call",
       iconBg: "bg-primary/10 text-primary",
-      change: "+12%",
-      changeColor: "text-green-600",
+      change: "dialer",
+      changeColor: "text-on-surface-variant",
     },
     {
-      title: "New Leads",
-      value: "156",
+      title: "Hot Leads",
+      value: loading ? '…' : (stats?.hot_leads ?? 0).toLocaleString(),
       icon: "how_to_reg",
       iconBg: "bg-secondary/10 text-secondary",
-      change: "+24%",
+      change: `of ${loading ? '…' : (stats?.total_leads ?? 0).toLocaleString()}`,
       changeColor: "text-green-600",
     },
     {
-      title: "Follow Ups",
-      value: "18",
+      title: "Unread Threads",
+      value: loading ? '…' : (stats?.unread_conversations ?? 0).toLocaleString(),
       icon: "pending_actions",
       iconBg: "bg-amber-100 text-amber-700",
-      change: "-4%",
-      changeColor: "text-error",
+      change: `of ${loading ? '…' : (stats?.conversations ?? 0).toLocaleString()}`,
+      changeColor: "text-amber-600",
     },
     {
-      title: "Conversions",
-      value: "3.8%",
+      title: "Conversion Rate",
+      value: loading ? '…' : conversionRate,
       icon: "assignment_turned_in",
       iconBg: "bg-purple-100 text-purple-700",
-      change: "+0.5%",
+      change: `${loading ? '…' : (stats?.expected_policies ?? 0).toLocaleString()} policies`,
       changeColor: "text-green-600",
     },
   ];

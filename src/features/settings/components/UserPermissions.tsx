@@ -1,11 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getOrganizationUsers, updateUserRole, inviteUser } from "../actions/user.actions";
+import { getOrganizationUsers, updateUserRole } from "../actions/user.actions";
+import InviteUserModal from "./InviteUserModal";
+import EditUserModal from "./EditUserModal";
 
 export default function UserPermissions() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<any[]>([]);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
 
   useEffect(() => {
     getOrganizationUsers().then((data) => {
@@ -24,39 +28,25 @@ export default function UserPermissions() {
     }
   };
 
-  const handleInviteUser = async () => {
-    const email = prompt("Enter the email address of the user you want to invite:");
-    if (!email) return;
-    
-    const firstName = prompt("Enter their first name:") || "New";
-    const lastName = prompt("Enter their last name:") || "User";
-    
-    try {
-      await inviteUser(email, firstName, lastName, "AGENT");
-      alert(`Successfully invited ${email}! They will be added to the team once they sign in.`);
-      // Refresh the list
-      const data = await getOrganizationUsers();
-      setUsers(data);
-    } catch (err: any) {
-      alert(err.message);
-    }
-  };
-
   if (loading) {
     return <div className="p-8 text-center text-on-surface-variant">Loading users...</div>;
   }
 
   return (
-    <div className="bg-surface-container rounded-xl border border-outline-variant/30 overflow-hidden">
-      <div className="p-6 border-b border-outline-variant/30 flex justify-between items-center">
-        <div>
-          <h2 className="text-title-md font-bold text-on-surface">Users & Permissions</h2>
-          <p className="text-body-sm text-on-surface-variant mt-1">Manage team members and their access levels.</p>
+    <>
+      <div className="bg-surface-container rounded-xl border border-outline-variant/30 overflow-hidden">
+        <div className="p-6 border-b border-outline-variant/30 flex justify-between items-center">
+          <div>
+            <h2 className="text-title-md font-bold text-on-surface">Users & Permissions</h2>
+            <p className="text-body-sm text-on-surface-variant mt-1">Manage team members and their access levels.</p>
+          </div>
+          <button 
+            onClick={() => setIsInviteModalOpen(true)} 
+            className="bg-primary hover:bg-primary/90 text-on-primary font-label-md px-4 py-2 rounded-lg transition-colors cursor-pointer"
+          >
+            Invite User
+          </button>
         </div>
-        <button onClick={handleInviteUser} className="bg-primary hover:bg-primary/90 text-on-primary font-label-md px-4 py-2 rounded-lg transition-colors cursor-pointer">
-          Invite User
-        </button>
-      </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-left">
@@ -96,7 +86,7 @@ export default function UserPermissions() {
                   {user.team?.name || "Unassigned"}
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button className="text-primary hover:text-primary/80 font-label-sm">Edit</button>
+                  <button onClick={() => setEditingUser(user)} className="text-primary hover:text-primary/80 font-label-sm cursor-pointer">Edit</button>
                 </td>
               </tr>
             ))}
@@ -108,6 +98,20 @@ export default function UserPermissions() {
           </tbody>
         </table>
       </div>
-    </div>
+      </div>
+      
+      <InviteUserModal 
+        isOpen={isInviteModalOpen} 
+        onClose={() => setIsInviteModalOpen(false)} 
+        onSuccess={(newUsers) => setUsers(newUsers)} 
+      />
+
+      <EditUserModal 
+        user={editingUser}
+        isOpen={!!editingUser}
+        onClose={() => setEditingUser(null)}
+        onSuccess={(newUsers) => setUsers(newUsers)}
+      />
+    </>
   );
 }

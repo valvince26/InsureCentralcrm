@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useTransition } from "react";
 import AddContactModal from "./AddContactModal";
 import Papa from "papaparse";
-import { useCrmStore } from "@/store/crmStore";
+import { importContacts } from "../actions/contacts.actions";
 
 export default function ContactsHeader() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const importContacts = useCrmStore((state) => state.importContacts);
+  const [isPending, startTransition] = useTransition();
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -21,34 +21,26 @@ export default function ContactsHeader() {
         const parsedContacts = results.data.map((row: any) => {
           const firstName = row["First Name"] || row["Name"] || "Unknown";
           const lastName = row["Last Name"] || "";
-          const name = `${firstName} ${lastName}`.trim();
-          const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || "?";
           
           return {
-            id: Math.random().toString(36).substring(7),
-            initials,
-            bgInitials: "bg-surface-variant",
-            textInitials: "text-on-surface",
-            name,
-            phone: row["Phone"] || "-",
-            email: row["Email"] || "-",
-            state: row["State"] || "-",
+            firstName,
+            lastName,
+            phone: row["Phone"] || "",
+            email: row["Email"] || "",
+            state: row["State"] || "",
             source: "CSV Import",
-            sourceBg: "bg-blue-50 text-blue-700",
-            ownerName: "Imported",
-            campaign: "CSV Import",
-            status: "Imported",
-            statusBg: "bg-gray-50 text-gray-700",
-            statusDot: "bg-gray-400",
-            disposition: "-",
-            lastCalled: "Never",
-            followUp: "-",
-            followUpColor: "text-on-surface-variant"
           };
         });
         
-        importContacts(parsedContacts);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+        startTransition(async () => {
+          const result = await importContacts(parsedContacts);
+          if (result.success) {
+            alert(`Successfully imported ${parsedContacts.length} contacts!`);
+          } else {
+            alert("Import failed: " + result.error);
+          }
+          if (fileInputRef.current) fileInputRef.current.value = "";
+        });
       }
     });
   };

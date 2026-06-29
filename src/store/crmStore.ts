@@ -216,6 +216,12 @@ export const useCrmStore = create<CrmState>()(
     }),
     {
       name: 'crm-storage',
+      partialize: (state) => ({ 
+        filters: state.filters, 
+        page: state.page, 
+        rowsPerPage: state.rowsPerPage 
+        // Omit contacts and selectedIds from persistence
+      }),
     }
   )
 );

@@ -1,15 +1,24 @@
 "use client";
 
-import React from "react";
+import React, { useTransition } from "react";
 import { useCrmStore } from "@/store/crmStore";
+import { bulkDeleteContacts } from "../actions/contacts.actions";
 
 export default function ContactsFilters() {
-  const { filters, setFilter, selectedIds, bulkDelete } = useCrmStore();
+  const { filters, setFilter, selectedIds, clearSelection } = useCrmStore();
+  const [isPending, startTransition] = useTransition();
 
   const handleDelete = () => {
     if (selectedIds.length === 0) return alert("Select contacts first.");
     if (confirm(`Delete ${selectedIds.length} selected contacts?`)) {
-      bulkDelete();
+      startTransition(async () => {
+        const result = await bulkDeleteContacts(selectedIds);
+        if (result.success) {
+          clearSelection();
+        } else {
+          alert("Failed to delete contacts: " + result.error);
+        }
+      });
     }
   };
 

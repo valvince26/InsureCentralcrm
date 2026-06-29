@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { useCrmStore } from "@/store/crmStore";
+import React, { useState, useTransition } from "react";
+import { importContacts } from "../actions/contacts.actions";
 
 interface Props {
   isOpen: boolean;
@@ -9,7 +9,7 @@ interface Props {
 }
 
 export default function AddContactModal({ isOpen, onClose }: Props) {
-  const addContact = useCrmStore((state) => state.addContact);
+  const [isPending, startTransition] = useTransition();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -23,32 +23,24 @@ export default function AddContactModal({ isOpen, onClose }: Props) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const initials = `${formData.firstName.charAt(0)}${formData.lastName.charAt(0)}`.toUpperCase();
     
-    addContact({
-      id: Math.random().toString(36).substring(7),
-      initials: initials || "?",
-      bgInitials: "bg-primary-container",
-      textInitials: "text-on-primary-container",
-      name: `${formData.firstName} ${formData.lastName}`.trim(),
-      phone: formData.phone || "-",
-      email: formData.email || "-",
-      state: formData.state || "-",
-      source: "Manual Entry",
-      sourceBg: "bg-surface-variant text-on-surface",
-      ownerName: "Current User", // Mocked
-      campaign: "-",
-      status: "New Lead",
-      statusBg: "bg-green-50 text-green-700",
-      statusDot: "bg-green-500",
-      disposition: "-",
-      lastCalled: "Never",
-      followUp: "-",
-      followUpColor: "text-on-surface-variant"
+    startTransition(async () => {
+      const result = await importContacts([{
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+        email: formData.email,
+        state: formData.state,
+        source: "Manual Entry"
+      }]);
+      
+      if (result.success) {
+        setFormData({ firstName: "", lastName: "", email: "", phone: "", state: "" });
+        onClose();
+      } else {
+        alert("Failed to save contact: " + result.error);
+      }
     });
-    
-    setFormData({ firstName: "", lastName: "", email: "", phone: "", state: "" });
-    onClose();
   };
 
   return (

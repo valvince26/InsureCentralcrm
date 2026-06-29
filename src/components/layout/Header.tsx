@@ -52,20 +52,10 @@ export default function Header() {
           <span className="material-symbols-outlined">help_outline</span>
         </button>
         
-        {isDialer ? (
+        {isDialer && (
           <div className="flex items-center gap-2 bg-secondary-container px-3 py-1.5 rounded-lg">
             <span className="material-symbols-outlined text-on-secondary-container" style={{ fontVariationSettings: "'FILL' 1" }}>timer</span>
             <span className="font-code-md text-code-md font-bold text-on-secondary-container">{formatTimer(sessionSeconds)}</span>
-          </div>
-        ) : (
-          <div className="flex items-center ml-2 pl-4 border-l border-outline-variant">
-            <span className="mr-3 text-right hidden sm:block">
-              <p className="text-body-md font-bold leading-none">Sarah Jenkins</p>
-              <p className="text-label-md text-on-surface-variant leading-none mt-1">Senior Underwriter</p>
-            </span>
-            <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container font-bold overflow-hidden cursor-pointer">
-              <img className="w-full h-full object-cover" alt="Sarah Jenkins" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYZ9Q-O0_VrnGtAY91i3IyQFc763lB7r_32EibygOiEo6BdyhQXieb3zx4rYlbmaYlMxbEvsLiYj3LLFWqomtrESAIeL7nk6Y6rE-fngjI8HLGS73GPDAC5OSLtOKvqcYR-DatE-ooCrdR93zPLbiuE6pE1gPe8xjgfqMoz72S_PBJiuqrIb-ecX1IfucgQcOmE60__J_ONY5u_wQAP4dUgxxaAxEb2D9ZoeCOYFbWNmm54fRymHWXf1BikkVAcfO9GyWOBqReuaay"/>
-            </div>
           </div>
         )}
       </div>

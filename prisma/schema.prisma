@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// CORE TENANT & AUTH MODELS
+// -----------------------------------------------------------------------------
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  clerkId   String?  @unique // Maps to Clerk Organization if using Clerk B2B features
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  teams    Team[]
+  contacts Contact[]
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  MANAGER
+  AGENT
+}
+
+model User {
+  id             String       @id @default(uuid())
+  clerkId        String       @unique // Matches the Clerk user ID
+  email          String       @unique
+  firstName      String?
+  lastName       String?
+  role           UserRole     @default(AGENT)
+  
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  teamId         String?
+  team           Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  contactsAssigned Contact[]  @relation("AssignedContacts")
+}
+
+model Team {
+  id             String       @id @default(uuid())
+  name           String
+  
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  users          User[]
+  contacts       Contact[]
+
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+// -----------------------------------------------------------------------------
+// CRM MODELS
+// -----------------------------------------------------------------------------
+
+model Contact {
+  id             String       @id @default(uuid())
+  firstName      String
+  lastName       String?
+  email          String?
+  phone          String?
+  
+  address        String?
+  city           String?
+  state          String?
+  zip            String?
+
+  tags           String[]     // E.g. array of tags
+  leadSource     String?
+
+  // Multitenancy Isolation
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Assignment
+  assignedUserId String?
+  assignedUser   User?        @relation("AssignedContacts", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  
+  assignedTeamId String?
+  assignedTeam   Team?        @relation(fields: [assignedTeamId], references: [id], onDelete: SetNull)
+
+  // System Flags
+  isDeleted      Boolean      @default(false)
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId, isDeleted])
+  @@index([assignedUserId])
+  @@index([phone])
+}

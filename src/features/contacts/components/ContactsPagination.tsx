@@ -1,34 +1,100 @@
-import React from "react";
+"use client";
+
+import React, { useMemo } from "react";
+import { useCrmStore } from "@/store/crmStore";
 
 export default function ContactsPagination() {
+  const { contacts, filters, page, rowsPerPage, setPage, setRowsPerPage } = useCrmStore();
+
+  const filteredContacts = useMemo(() => {
+    return contacts.filter((c) => {
+      if (filters.state !== "All States" && c.state !== filters.state) return false;
+      if (filters.owner !== "All Owners" && c.ownerName !== filters.owner) return false;
+      if (filters.campaign !== "All Campaigns" && c.campaign !== filters.campaign) return false;
+      return true;
+    });
+  }, [contacts, filters]);
+
+  const totalContacts = filteredContacts.length;
+  const totalPages = Math.max(1, Math.ceil(totalContacts / rowsPerPage));
+  
+  const startIdx = totalContacts === 0 ? 0 : (page - 1) * rowsPerPage + 1;
+  const endIdx = Math.min(page * rowsPerPage, totalContacts);
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (page <= 3) {
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (page >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', page - 1, page, page + 1, '...', totalPages);
+      }
+    }
+    return pages;
+  };
+
   return (
-    <div className="p-4 bg-surface-container-low border-t border-outline-variant flex justify-between items-center">
+    <div className="p-4 bg-surface-container-low border-t border-outline-variant flex flex-wrap justify-between items-center gap-4">
       <div className="text-xs text-on-surface-variant font-medium">
-        Showing <span className="text-on-surface font-bold">1-10</span> of <span className="text-on-surface font-bold">2,842</span> contacts
+        Showing <span className="text-on-surface font-bold">{startIdx}-{endIdx}</span> of <span className="text-on-surface font-bold">{totalContacts.toLocaleString()}</span> contacts
       </div>
+      
       <div className="flex items-center gap-2">
-        <button className="p-2 border border-outline-variant rounded-lg bg-white text-on-surface-variant hover:bg-surface-container-lowest disabled:opacity-30 cursor-not-allowed" disabled>
+        <button 
+          onClick={() => setPage(Math.max(1, page - 1))}
+          disabled={page === 1}
+          className="p-2 border border-outline-variant rounded-lg bg-white text-on-surface-variant hover:bg-surface-container-lowest disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+        >
           <span className="material-symbols-outlined text-[18px]">chevron_left</span>
         </button>
+        
         <div className="flex gap-1">
-          <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white text-xs font-bold shadow-sm cursor-pointer">1</button>
-          <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-outline-variant text-on-surface-variant text-xs font-bold hover:bg-surface-container-lowest cursor-pointer">2</button>
-          <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-outline-variant text-on-surface-variant text-xs font-bold hover:bg-surface-container-lowest cursor-pointer">3</button>
-          <span className="px-2 self-center text-on-surface-variant text-xs font-bold">...</span>
-          <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-outline-variant text-on-surface-variant text-xs font-bold hover:bg-surface-container-lowest cursor-pointer">285</button>
+          {getPageNumbers().map((p, i) => (
+            p === '...' ? (
+              <span key={`ellipsis-${i}`} className="px-2 self-center text-on-surface-variant text-xs font-bold">...</span>
+            ) : (
+              <button 
+                key={p}
+                onClick={() => setPage(p as number)}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold shadow-sm cursor-pointer ${
+                  page === p 
+                    ? "bg-primary text-white" 
+                    : "bg-white border border-outline-variant text-on-surface-variant hover:bg-surface-container-lowest"
+                }`}
+              >
+                {p}
+              </button>
+            )
+          ))}
         </div>
-        <button className="p-2 border border-outline-variant rounded-lg bg-white text-on-surface-variant hover:bg-surface-container-lowest cursor-pointer">
+        
+        <button 
+          onClick={() => setPage(Math.min(totalPages, page + 1))}
+          disabled={page === totalPages}
+          className="p-2 border border-outline-variant rounded-lg bg-white text-on-surface-variant hover:bg-surface-container-lowest disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed"
+        >
           <span className="material-symbols-outlined text-[18px]">chevron_right</span>
         </button>
       </div>
+      
       <div className="flex items-center gap-3">
         <span className="text-xs text-on-surface-variant">Rows per page:</span>
         <div className="relative">
-          <select className="appearance-none bg-white border border-outline-variant px-3 py-1 pr-8 rounded-md text-xs font-bold focus:ring-0 cursor-pointer">
-            <option>10</option>
-            <option>25</option>
-            <option>50</option>
-            <option>100</option>
+          <select 
+            value={rowsPerPage}
+            onChange={(e) => setRowsPerPage(Number(e.target.value))}
+            className="appearance-none bg-white border border-outline-variant px-3 py-1 pr-8 rounded-md text-xs font-bold focus:ring-0 cursor-pointer"
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
           </select>
           <span className="material-symbols-outlined absolute right-1.5 top-1 text-[16px] pointer-events-none text-on-surface-variant">expand_more</span>
         </div>

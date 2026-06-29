@@ -31,6 +31,23 @@ interface CrmState {
   updateContact: (id: string, updated: Partial<Contact>) => void;
   deleteContact: (id: string) => void;
   importContacts: (newContacts: Contact[]) => void;
+
+  // New Selection State
+  selectedIds: string[];
+  toggleSelection: (id: string) => void;
+  selectAll: (ids: string[]) => void;
+  clearSelection: () => void;
+  bulkDelete: () => void;
+
+  // Filters State
+  filters: { state: string; owner: string; campaign: string };
+  setFilter: (key: keyof CrmState["filters"], value: string) => void;
+
+  // Pagination State
+  page: number;
+  rowsPerPage: number;
+  setPage: (page: number) => void;
+  setRowsPerPage: (rows: number) => void;
 }
 
 const initialContacts: Contact[] = [
@@ -150,6 +167,10 @@ export const useCrmStore = create<CrmState>()(
   persist(
     (set) => ({
       contacts: initialContacts,
+      selectedIds: [],
+      filters: { state: "All States", owner: "All Owners", campaign: "All Campaigns" },
+      page: 1,
+      rowsPerPage: 10,
       
       addContact: (contact) => 
         set((state) => ({ contacts: [contact, ...state.contacts] })),
@@ -162,10 +183,36 @@ export const useCrmStore = create<CrmState>()(
       deleteContact: (id) =>
         set((state) => ({
           contacts: state.contacts.filter((c) => c.id !== id),
+          selectedIds: state.selectedIds.filter(selectedId => selectedId !== id)
         })),
         
       importContacts: (newContacts) =>
         set((state) => ({ contacts: [...newContacts, ...state.contacts] })),
+
+      toggleSelection: (id) =>
+        set((state) => ({
+          selectedIds: state.selectedIds.includes(id) 
+            ? state.selectedIds.filter(selId => selId !== id)
+            : [...state.selectedIds, id]
+        })),
+
+      selectAll: (ids) => set({ selectedIds: ids }),
+      clearSelection: () => set({ selectedIds: [] }),
+      
+      bulkDelete: () =>
+        set((state) => ({
+          contacts: state.contacts.filter(c => !state.selectedIds.includes(c.id)),
+          selectedIds: []
+        })),
+
+      setFilter: (key, value) =>
+        set((state) => ({
+          filters: { ...state.filters, [key]: value },
+          page: 1 // Reset pagination on filter change
+        })),
+
+      setPage: (page) => set({ page }),
+      setRowsPerPage: (rowsPerPage) => set({ rowsPerPage, page: 1 })
     }),
     {
       name: 'crm-storage',

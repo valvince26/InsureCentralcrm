@@ -1,66 +1,92 @@
 "use client";
 
-import React, { useState } from "react";
-import { useStillOSContacts } from "@/hooks/useStillOS";
+import React, { useMemo } from "react";
+import { useCrmStore } from "@/store/crmStore";
 
 export default function ContactsTable() {
-  const [page, setPage] = useState(1);
-  const { contacts, total, pages, loading, error } = useStillOSContacts(page, 50);
+  const { contacts, filters, page, rowsPerPage, selectedIds, toggleSelection, selectAll, clearSelection, setPage } = useCrmStore();
 
-  const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
-    const target = e.target as HTMLElement;
-    if (target.tagName !== "INPUT" && target.tagName !== "SELECT" && target.tagName !== "BUTTON") {
-      const checkbox = e.currentTarget.querySelector('input[type="checkbox"]') as HTMLInputElement;
-      if (checkbox) checkbox.checked = !checkbox.checked;
+  // 1. Apply Filters
+  const filteredContacts = useMemo(() => {
+    return contacts.filter((c) => {
+      if (filters.state !== "All States" && c.state !== filters.state) return false;
+      if (filters.owner !== "All Owners" && c.ownerName !== filters.owner) return false;
+      if (filters.campaign !== "All Campaigns" && c.campaign !== filters.campaign) return false;
+      return true;
+    });
+  }, [contacts, filters]);
+
+  // 2. Apply Pagination
+  const paginatedContacts = useMemo(() => {
+    const startIndex = (page - 1) * rowsPerPage;
+    return filteredContacts.slice(startIndex, startIndex + rowsPerPage);
+  }, [filteredContacts, page, rowsPerPage]);
+
+  const totalPages = Math.ceil(filteredContacts.length / rowsPerPage);
+  const allOnPageSelected = paginatedContacts.length > 0 && paginatedContacts.every((c) => selectedIds.includes(c.id));
+
+  const handleSelectAll = () => {
+    if (allOnPageSelected) {
+      clearSelection();
+    } else {
+      selectAll(filteredContacts.map(c => c.id));
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16 text-on-surface-variant text-sm">
-        Loading {total > 0 ? total.toLocaleString() : ''} contacts from StillOS…
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center py-16 text-error text-sm">
-        Failed to load contacts: {error}
-      </div>
-    );
-  }
+  const handleRowClick = (e: React.MouseEvent<HTMLTableRowElement>, id: string) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName !== "INPUT" && target.tagName !== "SELECT" && target.tagName !== "BUTTON") {
+      toggleSelection(id);
+    }
+  };
 
   return (
-    <>
-      <div className="px-4 py-2 text-xs text-on-surface-variant border-b border-outline-variant">
-        {total.toLocaleString()} total contacts · page {page} of {pages}
-      </div>
-      <div className="overflow-x-auto custom-scrollbar">
-        <table className="w-full text-left border-collapse min-w-[1400px]">
-          <thead>
-            <tr className="bg-surface-container-low border-b border-outline-variant">
-              <th className="py-3 px-4 w-10">
-                <input className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer" type="checkbox" />
-              </th>
-              <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Name</th>
-              <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Phone</th>
-              <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Email</th>
-              <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-center">State</th>
-              <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Lead Source</th>
-              <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Owner</th>
-              <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Campaign</th>
-              <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Status</th>
-              <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Disposition</th>
-              <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Last Called</th>
-              <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Follow Up</th>
+    <div className="overflow-x-auto custom-scrollbar flex-1">
+      <table className="w-full text-left border-collapse min-w-[1400px]">
+        <thead>
+          <tr className="bg-surface-container-low border-b border-outline-variant">
+            <th className="py-3 px-4 w-10">
+              <input 
+                className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer" 
+                type="checkbox" 
+                checked={allOnPageSelected}
+                onChange={handleSelectAll}
+              />
+            </th>
+            <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Name</th>
+            <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Phone</th>
+            <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Email</th>
+            <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-center">State</th>
+            <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Lead Source</th>
+            <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Owner</th>
+            <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Campaign</th>
+            <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Status</th>
+            <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Disposition</th>
+            <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Last Called</th>
+            <th className="py-3 px-4 font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Follow Up</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-outline-variant">
+          {paginatedContacts.length === 0 ? (
+            <tr>
+              <td colSpan={12} className="py-8 text-center text-on-surface-variant">
+                No contacts found matching the filters.
+              </td>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-outline-variant">
-            {contacts.map((c) => (
-              <tr key={c.id} onClick={handleRowClick} className="hover:bg-surface-container-lowest transition-colors group cursor-pointer">
+          ) : (
+            paginatedContacts.map((c) => (
+              <tr 
+                key={c.id} 
+                onClick={(e) => handleRowClick(e, c.id)} 
+                className={`transition-colors group cursor-pointer ${selectedIds.includes(c.id) ? "bg-primary-container/20" : "hover:bg-surface-container-lowest"}`}
+              >
                 <td className="py-4 px-4">
-                  <input className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer" type="checkbox" />
+                  <input 
+                    className="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer" 
+                    type="checkbox" 
+                    checked={selectedIds.includes(c.id)}
+                    onChange={() => toggleSelection(c.id)}
+                  />
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
@@ -78,7 +104,11 @@ export default function ContactsTable() {
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-surface-dim flex items-center justify-center text-[10px]">{c.ownerName?.slice(0, 2).toUpperCase()}</div>
+                    {c.ownerPhoto ? (
+                      <img className="w-5 h-5 rounded-full" alt={c.ownerName} src={c.ownerPhoto} />
+                    ) : (
+                      <div className="w-5 h-5 rounded-full bg-surface-dim flex items-center justify-center text-[10px]">{c.ownerInitials || c.ownerName.slice(0,2).toUpperCase()}</div>
+                    )}
                     <span className="text-xs">{c.ownerName}</span>
                   </div>
                 </td>
@@ -92,22 +122,10 @@ export default function ContactsTable() {
                 <td className="py-4 px-4 text-xs text-on-surface-variant">{c.lastCalled}</td>
                 <td className={`py-4 px-4 text-xs font-semibold ${c.followUpColor}`}>{c.followUp}</td>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {pages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-outline-variant text-xs text-on-surface-variant">
-          <span>{total.toLocaleString()} contacts</span>
-          <div className="flex gap-2">
-            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-              className="px-3 py-1 rounded border border-outline-variant disabled:opacity-40 hover:bg-surface-container">Prev</button>
-            <span className="px-3 py-1">{page} / {pages}</span>
-            <button onClick={() => setPage(p => Math.min(pages, p + 1))} disabled={page === pages}
-              className="px-3 py-1 rounded border border-outline-variant disabled:opacity-40 hover:bg-surface-container">Next</button>
-          </div>
-        </div>
-      )}
-    </>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }

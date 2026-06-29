@@ -1,6 +1,12 @@
+"use client";
+
 import React from "react";
+import { useDialer } from "../context/DialerContext";
 
 export default function ScriptPanel() {
+  const { activeItem } = useDialer();
+  const contactName = activeItem?.contact?.firstName || "[Lead Name]";
+
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <div className="p-4 bg-surface-container-low border-b border-outline-variant flex justify-between items-center">
@@ -15,7 +21,7 @@ export default function ScriptPanel() {
         <div className="prose prose-sm max-w-none">
           <h4 className="text-primary font-bold mb-2">The Opening</h4>
           <p className="text-on-surface-variant mb-6 leading-relaxed bg-white p-3 rounded-lg border border-primary/10">
-            "Hi <span className="bg-primary-container text-on-primary px-1 rounded">Robert</span>, this is Marcus from Insure Central. I'm reaching out because you recently requested a quote for life insurance online..."
+            "Hi <span className="bg-primary-container text-on-primary px-1 rounded">{contactName}</span>, this is Marcus from Insure Central. I'm reaching out because you recently requested a quote for life insurance online..."
           </p>
 
           <h4 className="text-primary font-bold mb-2">Discovery Questions</h4>

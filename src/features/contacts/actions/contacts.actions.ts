@@ -65,11 +65,12 @@ export async function bulkDeleteContacts(contactIds: string[]) {
   }
 }
 
+import { bulkAssignLeads } from "@/features/queue/actions/assignment.actions";
+
 export async function importContacts(contactsData: any[]) {
   try {
     const user = await getSession();
     
-    // Create contacts in bulk
     const contactsToCreate = contactsData.map(c => ({
       firstName: c.firstName || "Unknown",
       lastName: c.lastName || null,
@@ -79,13 +80,17 @@ export async function importContacts(contactsData: any[]) {
       source: c.source || "CSV Import",
       status: "New",
       organizationId: user.organizationId,
-      assignedUserId: user.id, // Assign to uploader by default
+      assignedUserId: user.id, // Initial assignment (fallback)
     }));
 
-    await prisma.contact.createMany({
+    const created = await prisma.contact.createManyAndReturn({
       data: contactsToCreate,
       skipDuplicates: true,
     });
+
+    if (created.length > 0) {
+      await bulkAssignLeads(created.map((c: any) => c.id));
+    }
 
     revalidatePath("/contacts");
     return { success: true };

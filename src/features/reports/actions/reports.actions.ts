@@ -20,15 +20,23 @@ async function getAuthUser() {
 export async function getReportMetrics() {
   const user = await getAuthUser();
   const orgId = user.organizationId;
+  const isAgent = user.role === "AGENT";
 
   // 1. Total Contacts
   const totalLeads = await prisma.contact.count({
-    where: { organizationId: orgId, isDeleted: false }
+    where: { 
+      organizationId: orgId, 
+      isDeleted: false,
+      ...(isAgent ? { assignedUserId: user.id } : {})
+    }
   });
 
   // 2. Call Metrics
   const callLogs = await prisma.callLog.findMany({
-    where: { organizationId: orgId }
+    where: { 
+      organizationId: orgId,
+      ...(isAgent ? { userId: user.id } : {})
+    }
   });
 
   const totalCalls = callLogs.length;
@@ -48,7 +56,11 @@ export async function getReportMetrics() {
 
   // 3. Top Agents
   const agents = await prisma.user.findMany({
-    where: { organizationId: orgId, isActive: true },
+    where: { 
+      organizationId: orgId, 
+      isActive: true,
+      ...(isAgent ? { id: user.id } : {})
+    },
     include: {
       callLogs: true
     }

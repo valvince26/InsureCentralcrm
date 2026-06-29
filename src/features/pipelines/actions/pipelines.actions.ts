@@ -20,7 +20,10 @@ async function getAuthUser() {
 
 export async function getPipelines() {
   const user = await getAuthUser();
+  const isAgent = user.role === "AGENT";
   
+  const opportunitiesFilter = isAgent ? { contact: { assignedUserId: user.id } } : {};
+
   const pipelines = await prisma.pipeline.findMany({
     where: { organizationId: user.organizationId },
     include: {
@@ -28,6 +31,7 @@ export async function getPipelines() {
         orderBy: { order: 'asc' },
         include: {
           opportunities: {
+            where: opportunitiesFilter,
             include: { contact: true }
           }
         }
@@ -109,7 +113,10 @@ export async function getPipelines() {
         stages: {
           orderBy: { order: 'asc' },
           include: {
-            opportunities: { include: { contact: true } }
+            opportunities: { 
+              where: opportunitiesFilter,
+              include: { contact: true } 
+            }
           }
         }
       }

@@ -23,11 +23,13 @@ async function getSession() {
 export async function getContacts() {
   try {
     const user = await getSession();
+    const isAgent = user.role === "AGENT";
     
     const contacts = await prisma.contact.findMany({
       where: {
         organizationId: user.organizationId,
         isDeleted: false,
+        ...(isAgent ? { assignedUserId: user.id } : {}),
       },
       include: {
         assignedUser: true,

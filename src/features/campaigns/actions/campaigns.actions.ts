@@ -20,12 +20,16 @@ async function getAuthUser() {
 
 export async function getCampaigns() {
   const user = await getAuthUser();
+  const isAgent = user.role === "AGENT";
   
   return await prisma.campaign.findMany({
     where: { organizationId: user.organizationId },
     include: {
       _count: {
-        select: { contacts: true, queueItems: true }
+        select: { 
+          contacts: isAgent ? { where: { assignedUserId: user.id } } : true,
+          queueItems: isAgent ? { where: { contact: { assignedUserId: user.id } } } : true
+        }
       }
     },
     orderBy: { priority: 'asc' }

@@ -59,6 +59,17 @@ export async function bulkDeleteContacts(contactIds: string[]) {
       },
     });
 
+    await prisma.auditLog.create({
+      data: {
+        action: "Bulk Delete",
+        entityType: "Contact",
+        entityId: "bulk",
+        details: JSON.stringify({ count: contactIds.length, ids: contactIds }),
+        userId: user.id,
+        organizationId: user.organizationId
+      }
+    });
+
     revalidatePath("/contacts");
     return { success: true };
   } catch (error: any) {
@@ -92,12 +103,91 @@ export async function importContacts(contactsData: any[]) {
 
     if (created.length > 0) {
       await bulkAssignLeads(created.map((c: any) => c.id));
+      
+      await prisma.auditLog.create({
+        data: {
+          action: "Import Contacts",
+          entityType: "Contact",
+          entityId: "bulk",
+          details: JSON.stringify({ count: created.length, source: contactsData[0]?.source || "CSV Import" }),
+          userId: user.id,
+          organizationId: user.organizationId
+        }
+      });
     }
 
     revalidatePath("/contacts");
     return { success: true };
   } catch (error: any) {
     console.error("Failed to import contacts:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getContactAuditLogs() {
+  try {
+    const user = await getSession();
+    
+    const logs = await prisma.auditLog.findMany({
+      where: {
+        organizationId: user.organizationId,
+        entityType: "Contact"
+      },
+      include: {
+        user: true
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50
+    });
+    
+    return logs;
+  } catch (error) {
+    console.error("Failed to fetch contact audit logs:", error);
+    return [];
+  }
+}
+
+export async function assignTagToContacts(contactIds: string[], tagName: string) {
+  try {
+    const user = await getSession();
+
+    let tag = await prisma.tag.findFirst({
+      where: { name: tagName, organizationId: user.organizationId }
+    });
+
+    if (!tag) {
+      tag = await prisma.tag.create({
+        data: { name: tagName, organizationId: user.organizationId }
+      });
+    }
+
+    // Assign tag to each contact (Prisma many-to-many update)
+    for (const id of contactIds) {
+      await prisma.contact.update({
+        where: { id, organizationId: user.organizationId },
+        data: {
+          tags: {
+            connect: { id: tag.id }
+          }
+        }
+      });
+    }
+
+    await prisma.auditLog.create({
+      data: {
+        action: "Tags Added",
+        entityType: "Contact",
+        entityId: "bulk",
+        details: JSON.stringify({ count: contactIds.length, tag: tagName }),
+        userId: user.id,
+        organizationId: user.organizationId
+      }
+    });
+
+    revalidatePath("/contacts");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Failed to assign tag:", error);
     return { success: false, error: error.message };
   }
 }

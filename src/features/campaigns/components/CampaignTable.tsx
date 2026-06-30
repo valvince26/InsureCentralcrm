@@ -18,24 +18,7 @@ export default function CampaignTable({ campaigns }: { campaigns: any[] }) {
     agents: 0,
     agentColor: "text-on-surface-variant/40",
     agentDot: "bg-outline-variant"
-  })) : [
-    {
-      id: "mock1",
-      name: "Q4 Life Insurance Bundle (Mock)",
-      lastUpdated: "Just now",
-      status: "Active",
-      statusBg: "bg-secondary-container text-on-secondary-container border-secondary/20",
-      dotBg: "bg-secondary animate-pulse",
-      leads: "4,520",
-      duration: "124h 15m",
-      conv: "5.2%",
-      convTrend: "trending_up",
-      convColor: "text-secondary",
-      agents: 12,
-      agentColor: "",
-      agentDot: "bg-secondary"
-    }
-  ];
+  })) : [];
 
   return (
     <div className="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm overflow-hidden">
@@ -121,7 +104,7 @@ export default function CampaignTable({ campaigns }: { campaigns: any[] }) {
       </div>
 
       <div className="px-6 py-4 border-t border-outline-variant flex items-center justify-between">
-        <span className="text-label-md text-on-surface-variant">Showing 4 of 24 campaigns</span>
+        <span className="text-label-md text-on-surface-variant">Showing {tableData.length} campaign{tableData.length !== 1 ? 's' : ''}</span>
         <div className="flex gap-2">
           <button className="p-2 border border-outline-variant rounded-lg hover:bg-surface-container-high disabled:opacity-50 transition-colors cursor-pointer" disabled>
             <span className="material-symbols-outlined">chevron_left</span>

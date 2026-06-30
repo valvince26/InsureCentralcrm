@@ -4,8 +4,9 @@ import prisma from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { SettingsService } from "@/lib/settings.service";
 
-async function getAuthUser() {
+async function getOrgId() {
   const cookieStore = await cookies();
   const supabase = createClient(cookieStore);
   const { data: { user } } = await supabase.auth.getUser();
@@ -13,83 +14,63 @@ async function getAuthUser() {
   
   const dbUser = await prisma.user.findUnique({
     where: { clerkId: user.id },
-    include: { organization: true },
   });
-  if (!dbUser) throw new Error("User not found in DB");
-  return dbUser;
+  if (!dbUser) throw new Error("User not found");
+  return dbUser.organizationId;
 }
 
-export async function getSettings(keys: string[]) {
-  try {
-    const user = await getAuthUser();
-    
-    // Fetch requested keys for the organization
-    const settings = await prisma.setting.findMany({
-      where: {
-        organizationId: user.organizationId,
-        key: { in: keys }
-      }
-    });
-
-    // Convert array of {key, value} to an object
-    const result: Record<string, string> = {};
-    settings.forEach(s => {
-      result[s.key] = s.value;
-    });
-
-    return result;
-  } catch (error) {
-    console.error("Error fetching settings:", error);
-    return {};
-  }
+export async function getGeneralSettings() {
+  const orgId = await getOrgId();
+  return SettingsService.getGeneral(orgId);
 }
 
-export async function saveSettings(data: Record<string, string>) {
-  try {
-    const user = await getAuthUser();
-    
-    // Require manager or admin to edit settings
-    if (user.role === "AGENT") {
-      throw new Error("Unauthorized: Agents cannot modify settings.");
-    }
+export async function saveGeneralSettings(data: any) {
+  const orgId = await getOrgId();
+  await SettingsService.setGeneral(orgId, data);
+  revalidatePath("/settings");
+}
 
-    const updates = Object.entries(data).map(async ([key, value]) => {
-      if (value === undefined || value === null) return;
-      
-      await prisma.setting.upsert({
-        where: {
-          organizationId_key: {
-            organizationId: user.organizationId,
-            key: key
-          }
-        },
-        update: { value: String(value) },
-        create: {
-          organizationId: user.organizationId,
-          key: key,
-          value: String(value)
-        }
-      });
-    });
+export async function getBrandingSettings() {
+  const orgId = await getOrgId();
+  return SettingsService.getBranding(orgId);
+}
 
-    await Promise.all(updates);
+export async function saveBrandingSettings(data: any) {
+  const orgId = await getOrgId();
+  await SettingsService.setBranding(orgId, data);
+  revalidatePath("/settings");
+}
 
-    // Create Audit Log
-    await prisma.auditLog.create({
-      data: {
-        action: "UPDATE_SETTINGS",
-        entityType: "Setting",
-        entityId: "batch",
-        details: JSON.stringify(Object.keys(data)),
-        userId: user.id,
-        organizationId: user.organizationId
-      }
-    });
+export async function getBusinessHours() {
+  const orgId = await getOrgId();
+  return SettingsService.getBusinessHours(orgId);
+}
 
-    revalidatePath("/settings");
-    return { success: true };
-  } catch (error: any) {
-    console.error("Error saving settings:", error);
-    throw new Error(error.message || "Failed to save settings");
-  }
+export async function saveBusinessHours(data: any) {
+  const orgId = await getOrgId();
+  await SettingsService.setBusinessHours(orgId, data);
+  revalidatePath("/settings");
+}
+
+export async function getEmailSettings() {
+  const orgId = await getOrgId();
+  return SettingsService.getSmtpConfig(orgId);
+}
+
+export async function saveEmailSettings(data: any) {
+  const orgId = await getOrgId();
+  await SettingsService.setSmtpConfig(orgId, data);
+  revalidatePath("/settings");
+}
+
+// Legacy exports for existing components
+export async function getSettings(keys?: string[]) {
+  const orgId = await getOrgId();
+  return SettingsService.getSetting(orgId, "legacy_settings", {});
+}
+
+export async function saveSettings(data: any) {
+  const orgId = await getOrgId();
+  await SettingsService.setSetting(orgId, "legacy_settings", data);
+  revalidatePath("/settings");
 }

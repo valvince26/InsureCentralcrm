@@ -28,7 +28,7 @@ export default function ContactsHeader() {
             phone: row["Phone"] || "",
             email: row["Email"] || "",
             state: row["State"] || "",
-            source: "CSV Import",
+            source: row["Lead Source"] || row["Source"] || "CSV Import",
           };
         });
         

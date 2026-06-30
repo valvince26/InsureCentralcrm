@@ -1,19 +1,7 @@
 import React from "react";
 
 export default function TopPerformingAgents({ agents }: { agents?: any[] }) {
-  const tableData = agents?.length ? agents : [
-    {
-      id: "mock1",
-      initials: "ML",
-      bg: "bg-primary-fixed-dim text-on-primary-fixed",
-      name: "Marcus Lowery (Mock)",
-      callsMade: "1,402",
-      conversionRate: "12.4%",
-      talkTime: "142m",
-      growth: "+12.4%",
-      growthColor: "text-[#006a6a] bg-secondary-container/20"
-    }
-  ];
+  const tableData = agents?.length ? agents : [];
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm hover:-translate-y-0.5 transition-transform lg:col-span-2 overflow-hidden flex flex-col">

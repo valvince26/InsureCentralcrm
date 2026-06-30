@@ -4,16 +4,33 @@ import React from "react";
 import { useCrmStore } from "@/store/crmStore";
 
 export default function ContactsTable() {
-  const { contacts, selectedIds, toggleSelection, selectAll, clearSelection } = useCrmStore();
+  const { contacts, selectedIds, toggleSelection, selectAll, clearSelection, filters, page, rowsPerPage, setTotalFromAPI } = useCrmStore();
 
-  // Contacts from store are already the current API page — no client-side slicing
-  const allOnPageSelected = contacts.length > 0 && contacts.every((c) => selectedIds.includes(c.id));
+  const filteredContacts = React.useMemo(() => {
+    return contacts.filter(c => {
+      if (filters.state !== "All States" && c.state !== filters.state) return false;
+      if (filters.owner !== "All Owners" && c.ownerName !== filters.owner) return false;
+      if (filters.campaign !== "All Campaigns" && c.campaign !== filters.campaign) return false;
+      return true;
+    });
+  }, [contacts, filters]);
+
+  React.useEffect(() => {
+    setTotalFromAPI(filteredContacts.length);
+  }, [filteredContacts.length, setTotalFromAPI]);
+
+  const paginatedContacts = React.useMemo(() => {
+    const startIndex = (page - 1) * rowsPerPage;
+    return filteredContacts.slice(startIndex, startIndex + rowsPerPage);
+  }, [filteredContacts, page, rowsPerPage]);
+
+  const allOnPageSelected = paginatedContacts.length > 0 && paginatedContacts.every((c) => selectedIds.includes(c.id));
 
   const handleSelectAll = () => {
     if (allOnPageSelected) {
       clearSelection();
     } else {
-      selectAll(contacts.map(c => c.id));
+      selectAll(paginatedContacts.map(c => c.id));
     }
   };
 
@@ -51,14 +68,14 @@ export default function ContactsTable() {
           </tr>
         </thead>
         <tbody className="divide-y divide-outline-variant">
-          {contacts.length === 0 ? (
+          {paginatedContacts.length === 0 ? (
             <tr>
               <td colSpan={12} className="py-8 text-center text-on-surface-variant">
                 No contacts found matching the filters.
               </td>
             </tr>
           ) : (
-            contacts.map((c) => (
+            paginatedContacts.map((c) => (
               <tr 
                 key={c.id} 
                 onClick={(e) => handleRowClick(e, c.id)} 

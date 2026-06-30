@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useTransition } from "react";
+import React, { useTransition, useState } from "react";
 import { useCrmStore } from "@/store/crmStore";
-import { bulkDeleteContacts } from "../actions/contacts.actions";
+import { bulkDeleteContacts, assignTagToContacts } from "../actions/contacts.actions";
+import ContactActivitySlideOut from "./ContactActivitySlideOut";
 
 export default function ContactsFilters() {
   const { filters, setFilter, selectedIds, clearSelection } = useCrmStore();
   const [isPending, startTransition] = useTransition();
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
 
   const handleDelete = () => {
     if (selectedIds.length === 0) return alert("Select contacts first.");
@@ -24,6 +26,21 @@ export default function ContactsFilters() {
 
   const handleAction = (actionName: string) => {
     if (selectedIds.length === 0) return alert("Select contacts first.");
+    
+    if (actionName === "Tags") {
+      const tagName = prompt("Enter tag name to assign:");
+      if (!tagName) return;
+      startTransition(async () => {
+        const result = await assignTagToContacts(selectedIds, tagName);
+        if (result.success) {
+          clearSelection();
+        } else {
+          alert("Failed to assign tag: " + result.error);
+        }
+      });
+      return;
+    }
+
     alert(`${actionName} action for ${selectedIds.length} contacts (Mock implementation)`);
   };
 
@@ -82,6 +99,13 @@ export default function ContactsFilters() {
         Tags
       </button>
       <div className="ml-auto flex items-center gap-2">
+        <button 
+          onClick={() => setIsActivityOpen(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 mr-2 text-on-surface-variant hover:text-primary transition-colors cursor-pointer text-xs font-medium"
+        >
+          <span className="material-symbols-outlined text-[16px]">history</span>
+          Activity Log
+        </button>
         <span className="text-[11px] text-on-surface-variant font-medium mr-1">
           {selectedIds.length > 0 ? `${selectedIds.length} Selected` : "Bulk Actions:"}
         </span>
@@ -100,6 +124,7 @@ export default function ContactsFilters() {
           </button>
         </div>
       </div>
+      <ContactActivitySlideOut isOpen={isActivityOpen} onClose={() => setIsActivityOpen(false)} />
     </div>
   );
 }

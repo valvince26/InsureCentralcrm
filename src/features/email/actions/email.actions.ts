@@ -21,40 +21,6 @@ async function getAuthUser() {
 export async function getEmailThreads() {
   const user = await getAuthUser();
 
-  // Auto-seed mock email thread if none exists
-  const existing = await prisma.emailThread.findFirst({
-    where: { organizationId: user.organizationId }
-  });
-
-  if (!existing) {
-    const contact = await prisma.contact.findFirst({
-      where: { organizationId: user.organizationId }
-    });
-    
-    if (contact) {
-      await prisma.emailThread.create({
-        data: {
-          subject: "Urgent: Policy Renewal #PX-99120",
-          contactId: contact.id,
-          userId: user.id,
-          organizationId: user.organizationId,
-          emails: {
-            create: [
-              { 
-                from: "Sarah Jenkins <s.jenkins@insureflow-partners.com>", 
-                to: `${user.firstName} ${user.lastName} <${user.email}>`,
-                body: `<p>Hi ${user.firstName},</p><p>I hope you're having a productive morning. I've been trying to process the premium renewal for Mr. Henderson (Account #PX-99120) but the system keeps throwing a validation error on the underlying liability coverage.</p><p>It seems the updated valuation report we received last week hasn't been properly mapped to the automated renewal pipeline. Given that the current policy expires in 48 hours, we need to bypass the manual check or get an override from the underwriting team as soon as possible.</p><p>I've attached the latest risk assessment and the correspondence with the client for your reference. Could you take a look and let me know if you can authorize the override?</p><p>Best regards,<br/>Sarah Jenkins<br/><span class="font-bold">Senior Claims Associate</span> | InsureFlow CRM</p>`, 
-                direction: "Inbound", 
-                organizationId: user.organizationId, 
-                createdAt: new Date(Date.now() - 3600000) 
-              }
-            ]
-          }
-        }
-      });
-    }
-  }
-
   const threads = await prisma.emailThread.findMany({
     where: {
       organizationId: user.organizationId,
@@ -91,6 +57,9 @@ export async function getEmailMessages(threadId: string) {
   return messages;
 }
 
+import { SettingsService } from "@/lib/settings.service";
+import nodemailer from "nodemailer";
+
 export async function sendEmail(threadId: string, body: string) {
   const user = await getAuthUser();
 
@@ -101,11 +70,50 @@ export async function sendEmail(threadId: string, body: string) {
 
   if (!thread) throw new Error("Thread not found");
 
+  // Fetch SMTP Configuration
+  const smtpConfig = await SettingsService.getSmtpConfig(user.organizationId);
+  
+  if (!smtpConfig || !smtpConfig.host || !smtpConfig.username || !smtpConfig.password) {
+    throw new Error("SMTP is not configured properly in Settings.");
+  }
+
+  // Set up Nodemailer Transporter
+  const transporter = nodemailer.createTransport({
+    host: smtpConfig.host,
+    port: parseInt(smtpConfig.port || "587"),
+    secure: smtpConfig.encryption === "ssl", // true for 465, false for other ports
+    auth: {
+      user: smtpConfig.username,
+      pass: smtpConfig.password, // This is decrypted by SettingsService!
+    },
+  });
+
+  const fromEmail = smtpConfig.companyEmail || user.email;
+  const fromName = smtpConfig.displayName || `${user.firstName} ${user.lastName}`;
+  const formattedFrom = `${fromName} <${fromEmail}>`;
+  const formattedTo = `${thread.contact.firstName} ${thread.contact.lastName} <${thread.contact.email}>`;
+
+  // Actually transmit the email
+  try {
+    await transporter.sendMail({
+      from: formattedFrom,
+      to: formattedTo,
+      subject: thread.subject, // Assuming thread.subject exists, fallback if needed
+      html: body,
+      replyTo: smtpConfig.replyTo || undefined,
+      bcc: smtpConfig.bccAddress || undefined
+    });
+  } catch (error: any) {
+    console.error("Failed to send email via SMTP:", error);
+    throw new Error("Failed to send email. Check your SMTP settings. Details: " + error.message);
+  }
+
+  // Save to Database after successful transmission
   await prisma.emailMessage.create({
     data: {
       threadId: thread.id,
-      from: `${user.firstName} ${user.lastName} <${user.email}>`,
-      to: `${thread.contact.firstName} ${thread.contact.lastName} <${thread.contact.email || 'unknown@example.com'}>`,
+      from: formattedFrom,
+      to: formattedTo,
       body,
       direction: "Outbound",
       organizationId: user.organizationId
@@ -115,6 +123,21 @@ export async function sendEmail(threadId: string, body: string) {
   await prisma.emailThread.update({
     where: { id: threadId },
     data: { lastActivityAt: new Date() }
+  });
+
+  revalidatePath("/email");
+  return { success: true };
+}
+
+export async function updateEmailThreadStatus(threadId: string, status: string) {
+  const user = await getAuthUser();
+
+  await prisma.emailThread.update({
+    where: { 
+      id: threadId,
+      organizationId: user.organizationId
+    },
+    data: { status }
   });
 
   revalidatePath("/email");

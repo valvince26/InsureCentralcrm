@@ -1,13 +1,25 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { sendEmail, getEmailMessages } from "@/features/email/actions/email.actions";
+import { useRouter } from "next/navigation";
+import { sendEmail, getEmailMessages, updateEmailThreadStatus } from "@/features/email/actions/email.actions";
 
 export default function ActiveEmailPane({ thread }: { thread?: any }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [replyText, setReplyText] = useState("");
   const [isReplying, setIsReplying] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  const handleAction = async (action: 'Trash' | 'Archived') => {
+    if (!thread) return;
+    try {
+      await updateEmailThreadStatus(thread.id, action);
+      router.push('/email');
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     if (thread) {
@@ -72,15 +84,24 @@ export default function ActiveEmailPane({ thread }: { thread?: any }) {
             <span className="material-symbols-outlined text-[20px]">reply</span>
             <span className="text-label-md">Reply</span>
           </button>
-          <button className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors cursor-pointer">
+          <button 
+            onClick={() => setIsReplying(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors cursor-pointer"
+          >
             <span className="material-symbols-outlined text-[20px]">forward</span>
             <span className="text-label-md">Forward</span>
           </button>
           <div className="h-4 w-[1px] bg-outline-variant mx-1"></div>
-          <button className="p-2 hover:bg-error/10 hover:text-error rounded-lg text-on-surface-variant transition-colors cursor-pointer">
+          <button 
+            onClick={() => handleAction('Trash')}
+            className="p-2 hover:bg-error/10 hover:text-error rounded-lg text-on-surface-variant transition-colors cursor-pointer"
+          >
             <span className="material-symbols-outlined text-[20px]">delete</span>
           </button>
-          <button className="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors cursor-pointer">
+          <button 
+            onClick={() => handleAction('Archived')}
+            className="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant transition-colors cursor-pointer"
+          >
             <span className="material-symbols-outlined text-[20px]">archive</span>
           </button>
         </div>

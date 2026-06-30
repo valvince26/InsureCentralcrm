@@ -64,47 +64,7 @@ export async function getPipelines() {
       }
     });
 
-    // Create a couple of mock opportunities to show off the board
-    const stage1 = defaultPipeline.stages.find(s => s.order === 1);
-    const stage2 = defaultPipeline.stages.find(s => s.order === 2);
 
-    if (stage1 && stage2) {
-      // Create a mock contact
-      const contact1 = await prisma.contact.create({
-        data: {
-          firstName: "Robert",
-          lastName: "Patterson",
-          organizationId: user.organizationId,
-        }
-      });
-      const contact2 = await prisma.contact.create({
-        data: {
-          firstName: "Samantha",
-          lastName: "Reed",
-          organizationId: user.organizationId,
-        }
-      });
-
-      // Create opportunities
-      await prisma.opportunity.createMany({
-        data: [
-          {
-            title: "Auto Policy Renewal",
-            value: 1200,
-            contactId: contact1.id,
-            stageId: stage1.id,
-            organizationId: user.organizationId,
-          },
-          {
-            title: "Home Insurance Quote",
-            value: 2450,
-            contactId: contact2.id,
-            stageId: stage2.id,
-            organizationId: user.organizationId,
-          }
-        ]
-      });
-    }
 
     // Refetch to get the nested opportunities
     return await prisma.pipeline.findMany({

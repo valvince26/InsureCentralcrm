@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { sendEmail, getEmailMessages, updateEmailThreadStatus } from "@/features/email/actions/email.actions";
+import { sendEmail, getEmailMessages, updateEmailThreadStatus, saveEmailReplyDraft } from "@/features/email/actions/email.actions";
 
 export default function ActiveEmailPane({ thread }: { thread?: any }) {
   const [messages, setMessages] = useState<any[]>([]);
@@ -55,6 +55,23 @@ export default function ActiveEmailPane({ thread }: { thread?: any }) {
       setTimeout(() => {
         scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
       }, 100);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    if (!replyText.trim() || !thread) return;
+    
+    const bodyText = `<p>${replyText.replace(/\n/g, '<br/>')}</p>`;
+    
+    setIsReplying(false);
+    
+    try {
+      await saveEmailReplyDraft(thread.id, bodyText);
+      const updated = await getEmailMessages(thread.id);
+      setMessages(updated);
+      setReplyText("");
     } catch (e) {
       console.error(e);
     }
@@ -150,7 +167,8 @@ export default function ActiveEmailPane({ thread }: { thread?: any }) {
                 {msg.direction === 'Outbound' && (
                   <div className="flex items-center gap-2 mb-4 text-label-md text-on-surface-variant">
                     <span className="material-symbols-outlined text-[16px]">reply</span>
-                    <strong>You</strong> replied on {new Date(msg.createdAt).toLocaleString()}
+                    <strong>You</strong> {msg.status === 'Drafts' ? 'drafted' : 'replied'} on {new Date(msg.createdAt).toLocaleString()}
+                    {msg.status === 'Drafts' && <span className="px-2 py-0.5 bg-secondary/10 text-secondary rounded text-[10px] font-bold uppercase">Draft</span>}
                   </div>
                 )}
                 <div 
@@ -223,6 +241,13 @@ export default function ActiveEmailPane({ thread }: { thread?: any }) {
                     className="px-4 py-2 text-label-md font-bold text-on-surface-variant hover:bg-surface-container-highest rounded-lg transition-colors cursor-pointer"
                   >
                     Cancel
+                  </button>
+                  <button 
+                    onClick={handleSaveDraft}
+                    disabled={!replyText.trim()}
+                    className="px-4 py-2 text-label-md font-bold text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Save Draft
                   </button>
                   <button 
                     onClick={handleSend}

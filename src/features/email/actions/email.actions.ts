@@ -180,3 +180,84 @@ export async function createEmailThread(contactIdOrEmail: string, subject: strin
 
   return sendEmail(thread.id, body);
 }
+
+export async function saveEmailDraft(contactIdOrEmail: string, subject: string, body: string) {
+  const user = await getAuthUser();
+
+  let contactId = contactIdOrEmail;
+
+  if (contactIdOrEmail.includes('@')) {
+    let contact = await prisma.contact.findFirst({
+      where: { email: contactIdOrEmail, organizationId: user.organizationId }
+    });
+    
+    if (!contact) {
+      contact = await prisma.contact.create({
+        data: {
+          firstName: contactIdOrEmail.split('@')[0],
+          email: contactIdOrEmail,
+          organizationId: user.organizationId,
+          source: "Email Compose"
+        }
+      });
+    }
+    contactId = contact.id;
+  }
+
+  const thread = await prisma.emailThread.create({
+    data: {
+      subject,
+      contactId,
+      userId: user.id,
+      organizationId: user.organizationId,
+      status: "Drafts"
+    }
+  });
+
+  await prisma.emailMessage.create({
+    data: {
+      threadId: thread.id,
+      from: user.email,
+      to: contactIdOrEmail,
+      body,
+      direction: "Outbound",
+      organizationId: user.organizationId
+    }
+  });
+
+  revalidatePath("/email");
+  return { success: true, threadId: thread.id };
+}
+
+export async function saveEmailReplyDraft(threadId: string, body: string) {
+  const user = await getAuthUser();
+
+  const thread = await prisma.emailThread.findUnique({
+    where: { id: threadId, organizationId: user.organizationId },
+    include: { contact: true }
+  });
+
+  if (!thread) throw new Error("Thread not found");
+
+  const formattedTo = `${thread.contact.firstName} ${thread.contact.lastName} <${thread.contact.email}>`;
+
+  await prisma.emailMessage.create({
+    data: {
+      threadId: thread.id,
+      from: user.email,
+      to: formattedTo,
+      body,
+      direction: "Outbound",
+      organizationId: user.organizationId,
+      status: "Drafts"
+    }
+  });
+
+  await prisma.emailThread.update({
+    where: { id: threadId },
+    data: { lastActivityAt: new Date(), status: "Drafts" }
+  });
+
+  revalidatePath("/email");
+  return { success: true };
+}

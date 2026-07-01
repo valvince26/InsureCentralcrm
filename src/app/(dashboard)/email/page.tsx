@@ -7,21 +7,26 @@ import { getEmailThreads } from "@/features/email/actions/email.actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function EmailPage({ searchParams }: { searchParams: Promise<{ t?: string }> }) {
+export default async function EmailPage({ searchParams }: { searchParams: Promise<{ t?: string, folder?: string }> }) {
   try {
     const params = await searchParams;
-    const threads = await getEmailThreads();
+    const folder = params.folder || "Inbox";
+    const allThreads = await getEmailThreads();
+    
+    const threads = allThreads.filter((t: any) => t.status === folder);
+    
     const activeThreadId = params.t || (threads.length > 0 ? threads[0].id : null);
     
-    const activeThread = threads.find((t: any) => t.id === activeThreadId);
+    // allow viewing thread even if it's not in the current folder, just in case
+    const activeThread = threads.find((t: any) => t.id === activeThreadId) || allThreads.find((t: any) => t.id === activeThreadId);
 
-    // Calculate unread count (mock for now, assume all without 'Sent' are unread)
-    const unreadCount = threads.filter((t: any) => t.status === "Inbox").length;
+    // Calculate unread count
+    const unreadCount = allThreads.filter((t: any) => t.status === "Inbox").length;
 
     return (
       <EmailLayout>
-        <EmailFolders unreadCount={unreadCount} />
-        <EmailList threads={threads} activeId={activeThreadId} />
+        <EmailFolders unreadCount={unreadCount} currentFolder={folder} />
+        <EmailList threads={threads} activeId={activeThreadId} folder={folder} />
         <ActiveEmailPane thread={activeThread} />
       </EmailLayout>
     );

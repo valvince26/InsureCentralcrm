@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useTransition, useRef } from "react";
 import { getContacts } from "@/features/contacts/actions/contacts.actions";
-import { createEmailThread } from "../actions/email.actions";
+import { createEmailThread, saveEmailDraft } from "../actions/email.actions";
 import { useUiStore } from "@/store/uiStore";
 
 export default function ComposeEmailModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
@@ -66,6 +66,29 @@ export default function ComposeEmailModal({ isOpen, onClose }: { isOpen: boolean
         onClose();
       } catch (err: any) {
         showAlert("Failed to send email: " + err.message);
+      }
+    });
+  };
+
+  const handleSaveDraft = () => {
+    const finalContact = selectedContact || searchQuery;
+    if (!finalContact && !subject.trim() && !body.trim()) {
+      showAlert("Please enter at least some content to save a draft.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const bodyText = `<p>${body.replace(/\n/g, '<br/>')}</p>`;
+        await saveEmailDraft(finalContact || "Draft Contact", subject || "(No Subject)", bodyText);
+        showAlert("Draft saved!");
+        setSubject("");
+        setBody("");
+        setSelectedContact("");
+        setSearchQuery("");
+        onClose();
+      } catch (err: any) {
+        showAlert("Failed to save draft: " + err.message);
       }
     });
   };
@@ -150,14 +173,23 @@ export default function ComposeEmailModal({ isOpen, onClose }: { isOpen: boolean
               <span className="material-symbols-outlined text-[20px]">image</span>
             </button>
           </div>
-          <button 
-            onClick={handleSend}
-            disabled={isPending}
-            className="px-6 py-2 bg-primary text-on-primary rounded-lg font-bold text-label-md hover:bg-primary-container shadow-sm transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
-          >
-            <span>{isPending ? 'Sending...' : 'Send'}</span>
-            <span className="material-symbols-outlined text-[16px]">send</span>
-          </button>
+          <div className="flex gap-3">
+            <button 
+              onClick={handleSaveDraft}
+              disabled={isPending}
+              className="px-6 py-2 border border-outline-variant text-on-surface rounded-lg font-bold text-label-md hover:bg-surface-container-highest shadow-sm transition-all cursor-pointer disabled:opacity-50"
+            >
+              Save Draft
+            </button>
+            <button 
+              onClick={handleSend}
+              disabled={isPending}
+              className="px-6 py-2 bg-primary text-on-primary rounded-lg font-bold text-label-md hover:bg-primary-container shadow-sm transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
+            >
+              <span>{isPending ? 'Sending...' : 'Send'}</span>
+              <span className="material-symbols-outlined text-[16px]">send</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -4,12 +4,12 @@ import React from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
-export default function EmailList({ threads, activeId }: { threads: any[], activeId: string | null }) {
+export default function EmailList({ threads, activeId, folder = "Inbox" }: { threads: any[], activeId: string | null, folder?: string }) {
   return (
     <section className="w-[380px] flex-shrink-0 bg-white border-r border-outline-variant flex flex-col h-full z-10">
       <div className="p-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-lowest">
         <div className="flex items-center gap-2">
-          <span className="text-title-md text-on-surface">Inbox</span>
+          <span className="text-title-md text-on-surface">{folder}</span>
           <span className="material-symbols-outlined text-[16px] text-on-surface-variant">expand_more</span>
         </div>
         <div className="flex gap-1">
@@ -38,7 +38,7 @@ export default function EmailList({ threads, activeId }: { threads: any[], activ
             const snippet = snippetRaw.replace(/<[^>]+>/g, '').substring(0, 100);
 
             return (
-              <Link key={thread.id} href={`/email?t=${thread.id}`} className="block">
+              <Link key={thread.id} href={`/email?folder=${folder}&t=${thread.id}`} className="block">
                 <div className={`p-4 border-b ${isActive ? 'border-primary bg-primary/5 relative' : 'border-outline-variant hover:bg-surface-container-lowest transition-colors group'}`}>
                   {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>}
                   

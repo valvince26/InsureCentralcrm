@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import ComposeEmailModal from "./ComposeEmailModal";
 
-export default function EmailFolders({ unreadCount = 0 }: { unreadCount?: number }) {
+export default function EmailFolders({ unreadCount = 0, currentFolder = "Inbox" }: { unreadCount?: number, currentFolder?: string }) {
   const [isComposeOpen, setIsComposeOpen] = useState(false);
 
   return (
@@ -20,29 +20,29 @@ export default function EmailFolders({ unreadCount = 0 }: { unreadCount?: number
           </button>
         </div>
         <nav className="flex-1 px-4 space-y-1">
-          <Link href="/email" className="flex items-center justify-between px-4 py-2.5 bg-primary/10 text-primary rounded-lg font-medium">
+          <Link href="/email?folder=Inbox" className={`flex items-center justify-between px-4 py-2.5 rounded-lg font-medium transition-colors ${currentFolder === 'Inbox' ? 'bg-primary/10 text-primary' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>inbox</span>
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: currentFolder === 'Inbox' ? "'FILL' 1" : "" }}>inbox</span>
               <span className="text-body-md">Inbox</span>
             </div>
             {unreadCount > 0 && (
-              <span className="text-[11px] bg-primary text-on-primary px-1.5 rounded-full">{unreadCount}</span>
+              <span className={`text-[11px] px-1.5 rounded-full ${currentFolder === 'Inbox' ? 'bg-primary text-on-primary' : 'bg-surface-container-highest text-on-surface'}`}>{unreadCount}</span>
             )}
           </Link>
-          <Link href="#" className="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">
-            <span className="material-symbols-outlined">send</span>
+          <Link href="/email?folder=Sent" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${currentFolder === 'Sent' ? 'bg-primary/10 text-primary font-medium' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: currentFolder === 'Sent' ? "'FILL' 1" : "" }}>send</span>
             <span className="text-body-md">Sent</span>
           </Link>
-          <Link href="#" className="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">
-            <span className="material-symbols-outlined">draft</span>
+          <Link href="/email?folder=Drafts" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${currentFolder === 'Drafts' ? 'bg-primary/10 text-primary font-medium' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: currentFolder === 'Drafts' ? "'FILL' 1" : "" }}>draft</span>
             <span className="text-body-md">Drafts</span>
           </Link>
-          <Link href="#" className="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">
-            <span className="material-symbols-outlined">archive</span>
+          <Link href="/email?folder=Archived" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${currentFolder === 'Archived' ? 'bg-primary/10 text-primary font-medium' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: currentFolder === 'Archived' ? "'FILL' 1" : "" }}>archive</span>
             <span className="text-body-md">Archived</span>
           </Link>
-          <Link href="#" className="flex items-center gap-3 px-4 py-2.5 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">
-            <span className="material-symbols-outlined">delete</span>
+          <Link href="/email?folder=Trash" className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors ${currentFolder === 'Trash' ? 'bg-primary/10 text-primary font-medium' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: currentFolder === 'Trash' ? "'FILL' 1" : "" }}>delete</span>
             <span className="text-body-md">Trash</span>
           </Link>
           

@@ -81,7 +81,7 @@ export async function bulkDeleteContacts(contactIds: string[]) {
 
 import { bulkAssignLeads } from "@/features/queue/actions/assignment.actions";
 
-export async function importContacts(contactsData: any[]) {
+export async function importContacts(contactsData: any[], tagsToAssign?: string[]) {
   try {
     const user = await getSession();
     
@@ -105,12 +105,34 @@ export async function importContacts(contactsData: any[]) {
     if (created.length > 0) {
       await bulkAssignLeads(created.map((c: any) => c.id));
       
+      if (tagsToAssign && tagsToAssign.length > 0) {
+        const tagIds = [];
+        for (const tagName of tagsToAssign) {
+          let tag = await prisma.tag.findFirst({
+            where: { name: tagName, organizationId: user.organizationId }
+          });
+          if (!tag) {
+            tag = await prisma.tag.create({
+              data: { name: tagName, organizationId: user.organizationId }
+            });
+          }
+          tagIds.push(tag.id);
+        }
+
+        for (const c of created) {
+          await prisma.contact.update({
+            where: { id: c.id, organizationId: user.organizationId },
+            data: { tags: { connect: tagIds.map(id => ({ id })) } }
+          });
+        }
+      }
+
       await prisma.auditLog.create({
         data: {
           action: "Import Contacts",
           entityType: "Contact",
           entityId: "bulk",
-          details: JSON.stringify({ count: created.length, source: contactsData[0]?.source || "CSV Import" }),
+          details: JSON.stringify({ count: created.length, source: contactsData[0]?.source || "CSV Import", tags: tagsToAssign }),
           userId: user.id,
           organizationId: user.organizationId
         }

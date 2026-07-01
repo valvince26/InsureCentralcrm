@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useTransition, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { createContact, getTags } from "../actions/contacts.actions";
 import { useUiStore } from "@/store/uiStore";
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function AddContactModal({ isOpen, onClose }: Props) {
+  const router = useRouter();
   const { showAlert } = useUiStore();
   const [isPending, startTransition] = useTransition();
 
@@ -69,6 +71,7 @@ export default function AddContactModal({ isOpen, onClose }: Props) {
       
       if (result.success) {
         setFormData({ firstName: "", lastName: "", email: "", phone: "", state: "", tagName: "" });
+        router.refresh();
         onClose();
       } else {
         showAlert("Failed to save contact: " + result.error);

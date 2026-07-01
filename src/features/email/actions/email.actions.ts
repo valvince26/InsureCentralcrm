@@ -143,3 +143,19 @@ export async function updateEmailThreadStatus(threadId: string, status: string) 
   revalidatePath("/email");
   return { success: true };
 }
+
+export async function createEmailThread(contactId: string, subject: string, body: string) {
+  const user = await getAuthUser();
+
+  const thread = await prisma.emailThread.create({
+    data: {
+      subject,
+      contactId,
+      userId: user.id,
+      organizationId: user.organizationId,
+      status: "Sent"
+    }
+  });
+
+  return sendEmail(thread.id, body);
+}

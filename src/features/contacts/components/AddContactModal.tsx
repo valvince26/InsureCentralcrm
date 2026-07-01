@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useTransition, useRef } from "react";
 import { createContact, getTags } from "../actions/contacts.actions";
+import { useUiStore } from "@/store/uiStore";
 
 interface Props {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export default function AddContactModal({ isOpen, onClose }: Props) {
+  const { showAlert } = useUiStore();
   const [isPending, startTransition] = useTransition();
 
   const [formData, setFormData] = useState({
@@ -69,7 +71,7 @@ export default function AddContactModal({ isOpen, onClose }: Props) {
         setFormData({ firstName: "", lastName: "", email: "", phone: "", state: "", tagName: "" });
         onClose();
       } else {
-        alert("Failed to save contact: " + result.error);
+        showAlert("Failed to save contact: " + result.error);
       }
     });
   };

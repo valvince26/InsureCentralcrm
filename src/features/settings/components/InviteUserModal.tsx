@@ -2,6 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 import { inviteUser, getOrganizationUsers } from "../actions/user.actions";
+import { useUiStore } from "@/store/uiStore";
 
 interface Props {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function InviteUserModal({ isOpen, onClose, onSuccess }: Props) {
+  const { showAlert } = useUiStore();
   const [isPending, startTransition] = useTransition();
 
   const [formData, setFormData] = useState({
@@ -40,7 +42,7 @@ export default function InviteUserModal({ isOpen, onClose, onSuccess }: Props) {
           onClose();
         }
       } catch (err: any) {
-        alert("Failed to invite user: " + err.message);
+        showAlert("Failed to invite user: " + err.message);
       }
     });
   };

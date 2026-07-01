@@ -3,25 +3,30 @@
 import React, { useState, useTransition } from "react";
 import EditUserModal from "@/features/settings/components/EditUserModal";
 import { deleteUser } from "@/features/settings/actions/user.actions";
+import { useUiStore } from "@/store/uiStore";
 
 interface Props {
   user: any;
+  onRefresh?: () => void;
 }
 
-export default function TeamRowActions({ user }: Props) {
+export default function TeamRowActions({ user, onRefresh }: Props) {
+  const { showAlert, showConfirm } = useUiStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     setIsMenuOpen(false);
-    if (!confirm(`Are you sure you want to delete ${user.firstName} ${user.lastName}?`)) return;
+    const confirmed = await showConfirm(`Are you sure you want to delete ${user.firstName} ${user.lastName}?`);
+    if (!confirmed) return;
     
     startTransition(async () => {
       try {
         await deleteUser(user.id);
+        if (onRefresh) onRefresh();
       } catch (err: any) {
-        alert("Failed to delete user: " + err.message);
+        showAlert("Failed to delete user: " + err.message);
       }
     });
   };

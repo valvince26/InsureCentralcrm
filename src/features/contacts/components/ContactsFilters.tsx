@@ -5,45 +5,54 @@ import { useCrmStore } from "@/store/crmStore";
 import { bulkDeleteContacts, assignTagToContacts } from "../actions/contacts.actions";
 import ContactActivitySlideOut from "./ContactActivitySlideOut";
 import AdvancedFiltersModal from "./AdvancedFiltersModal";
+import { useUiStore } from "@/store/uiStore";
 
 export default function ContactsFilters() {
   const { filters, setFilter, selectedIds, clearSelection } = useCrmStore();
+  const { showAlert, showConfirm, showPrompt } = useUiStore();
   const [isPending, startTransition] = useTransition();
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
 
-  const handleDelete = () => {
-    if (selectedIds.length === 0) return alert("Select contacts first.");
-    if (confirm(`Delete ${selectedIds.length} selected contacts?`)) {
+  const handleDelete = async () => {
+    if (selectedIds.length === 0) {
+      showAlert("Select contacts first.");
+      return;
+    }
+    const confirmed = await showConfirm(`Delete ${selectedIds.length} selected contacts?`);
+    if (confirmed) {
       startTransition(async () => {
         const result = await bulkDeleteContacts(selectedIds);
         if (result.success) {
           clearSelection();
         } else {
-          alert("Failed to delete contacts: " + result.error);
+          showAlert("Failed to delete contacts: " + result.error);
         }
       });
     }
   };
 
-  const handleAction = (actionName: string) => {
-    if (selectedIds.length === 0) return alert("Select contacts first.");
+  const handleAction = async (actionName: string) => {
+    if (selectedIds.length === 0) {
+      showAlert("Select contacts first.");
+      return;
+    }
     
     if (actionName === "Tags") {
-      const tagName = prompt("Enter tag name to assign:");
+      const tagName = await showPrompt("Enter tag name to assign:");
       if (!tagName) return;
       startTransition(async () => {
         const result = await assignTagToContacts(selectedIds, tagName);
         if (result.success) {
           clearSelection();
         } else {
-          alert("Failed to assign tag: " + result.error);
+          showAlert("Failed to assign tag: " + result.error);
         }
       });
       return;
     }
 
-    alert(`${actionName} action for ${selectedIds.length} contacts (Mock implementation)`);
+    showAlert(`${actionName} action for ${selectedIds.length} contacts (Mock implementation)`);
   };
 
   return (

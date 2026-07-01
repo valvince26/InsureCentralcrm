@@ -2,9 +2,11 @@
 
 import React, { useState } from "react";
 import { useDialer } from "../context/DialerContext";
+import { useUiStore } from "@/store/uiStore";
 
 export default function DispositionBar() {
   const { activeItem, nextLead, isPending } = useDialer();
+  const { showAlert } = useUiStore();
   const [activeDisp, setActiveDisp] = useState<string | null>(null);
 
   const dispositions = [
@@ -20,7 +22,7 @@ export default function DispositionBar() {
 
   const handleSubmit = () => {
     if (!activeDisp) {
-      alert("Please select a disposition first.");
+      showAlert("Please select a disposition first.");
       return;
     }
     

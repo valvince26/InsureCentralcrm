@@ -3,8 +3,10 @@
 import React, { useState, useEffect, useTransition, useRef } from "react";
 import { getContacts } from "@/features/contacts/actions/contacts.actions";
 import { createEmailThread } from "../actions/email.actions";
+import { useUiStore } from "@/store/uiStore";
 
 export default function ComposeEmailModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { showAlert } = useUiStore();
   const [contacts, setContacts] = useState<any[]>([]);
   const [selectedContact, setSelectedContact] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,21 +50,22 @@ export default function ComposeEmailModal({ isOpen, onClose }: { isOpen: boolean
   const handleSend = () => {
     const finalContact = selectedContact || searchQuery;
     if (!finalContact || !subject.trim() || !body.trim()) {
-      return alert("Please fill in all fields.");
+      showAlert("Please fill in all fields.");
+      return;
     }
 
     startTransition(async () => {
       try {
         const bodyText = `<p>${body.replace(/\n/g, '<br/>')}</p>`;
         await createEmailThread(finalContact, subject, bodyText);
-        alert("Email sent!");
+        showAlert("Email sent!");
         setSubject("");
         setBody("");
         setSelectedContact("");
         setSearchQuery("");
         onClose();
       } catch (err: any) {
-        alert("Failed to send email: " + err.message);
+        showAlert("Failed to send email: " + err.message);
       }
     });
   };

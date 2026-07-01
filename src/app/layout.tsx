@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "InsureCentral CRM & Operations — Still OS Digital Holdings",
 };
 
+import GlobalPopup from "@/components/ui/GlobalPopup";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -35,6 +37,7 @@ export default function RootLayout({
       </head>
       <body className="bg-background text-on-surface">
         {children}
+        <GlobalPopup />
       </body>
     </html>
   );

@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { getTags, createTag, deleteTag } from "@/features/settings/actions/crm.actions";
+import { useUiStore } from "@/store/uiStore";
 
 export default function TagsSettings() {
   const [tags, setTags] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  const { showConfirm } = useUiStore();
   
   const [newTag, setNewTag] = useState({ name: "", color: "#e2e8f0", category: "General" });
 
@@ -31,11 +34,13 @@ export default function TagsSettings() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this tag?")) return;
-    setSaving(true);
-    await deleteTag(id);
-    loadData();
-    setSaving(false);
+    const confirmed = await showConfirm("Are you sure you want to delete this tag?");
+    if (!confirmed) return;
+
+    startTransition(async () => {
+      await deleteTag(id);
+      loadData();
+    });
   };
 
   if (loading) {

@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { getCustomFields, createCustomField, deleteCustomField } from "@/features/settings/actions/crm.actions";
+import { useUiStore } from "@/store/uiStore";
 
 export default function CustomFieldsSettings() {
+  const { showConfirm } = useUiStore();
   const [fields, setFields] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isPending, startTransition] = useTransition();
   
   const [newField, setNewField] = useState({ name: "", type: "text", entityType: "contact" });
 
@@ -31,11 +34,13 @@ export default function CustomFieldsSettings() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this custom field?")) return;
-    setSaving(true);
-    await deleteCustomField(id);
-    loadData();
-    setSaving(false);
+    const confirmed = await showConfirm("Are you sure you want to delete this custom field?");
+    if (!confirmed) return;
+
+    startTransition(async () => {
+      await deleteCustomField(id);
+      loadData();
+    });
   };
 
   if (loading) {

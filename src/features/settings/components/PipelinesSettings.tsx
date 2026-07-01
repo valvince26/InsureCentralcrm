@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { getPipelines, createPipeline, deletePipeline } from "@/features/settings/actions/crm.actions";
+import { useUiStore } from "@/store/uiStore";
 
 export default function PipelinesSettings() {
   const [pipelines, setPipelines] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const { showConfirm } = useUiStore();
+  const [isPending, startTransition] = useTransition();
   
   const [newName, setNewName] = useState("");
 
@@ -31,11 +34,13 @@ export default function PipelinesSettings() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this pipeline? All related stages and opportunity relations might be affected.")) return;
-    setSaving(true);
-    await deletePipeline(id);
-    loadData();
-    setSaving(false);
+    const confirmed = await showConfirm("Are you sure you want to delete this pipeline? All related stages and opportunity relations might be affected.");
+    if (!confirmed) return;
+    
+    startTransition(async () => {
+      await deletePipeline(id);
+      loadData();
+    });
   };
 
   if (loading) {

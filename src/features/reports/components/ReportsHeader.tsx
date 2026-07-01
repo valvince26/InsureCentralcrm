@@ -2,10 +2,12 @@
 
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useUiStore } from "@/store/uiStore";
 
 export default function ReportsHeader({ topAgents }: { topAgents?: any[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { showAlert } = useUiStore();
   const range = searchParams.get("range") || "this_month";
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCustomModal, setShowCustomModal] = useState(false);
@@ -18,7 +20,7 @@ export default function ReportsHeader({ topAgents }: { topAgents?: any[] }) {
 
   const handleExportCSV = () => {
     if (!topAgents || topAgents.length === 0) {
-      alert("No data available to export.");
+      showAlert("No data available to export.");
       return;
     }
 

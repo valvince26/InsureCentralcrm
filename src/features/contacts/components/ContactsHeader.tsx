@@ -4,9 +4,11 @@ import React, { useState, useRef, useTransition } from "react";
 import AddContactModal from "./AddContactModal";
 import Papa from "papaparse";
 import { importContacts } from "../actions/contacts.actions";
+import { useUiStore } from "@/store/uiStore";
 
 export default function ContactsHeader() {
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const { showAlert } = useUiStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -35,9 +37,9 @@ export default function ContactsHeader() {
         startTransition(async () => {
           const result = await importContacts(parsedContacts);
           if (result.success) {
-            alert(`Successfully imported ${parsedContacts.length} contacts!`);
+            showAlert(`Successfully imported ${parsedContacts.length} contacts!`);
           } else {
-            alert("Import failed: " + result.error);
+            showAlert("Import failed: " + result.error);
           }
           if (fileInputRef.current) fileInputRef.current.value = "";
         });

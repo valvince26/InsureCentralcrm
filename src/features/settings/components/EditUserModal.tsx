@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useTransition } from "react";
 import { updateUser, getOrganizationUsers } from "../actions/user.actions";
+import { useUiStore } from "@/store/uiStore";
 
 interface Props {
   user: any;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function EditUserModal({ user, isOpen, onClose, onSuccess }: Props) {
+  const { showAlert } = useUiStore();
   const [isPending, startTransition] = useTransition();
 
   const [formData, setFormData] = useState({
@@ -48,7 +50,7 @@ export default function EditUserModal({ user, isOpen, onClose, onSuccess }: Prop
           onClose();
         }
       } catch (err: any) {
-        alert("Failed to update user: " + err.message);
+        showAlert("Failed to update user: " + err.message);
       }
     });
   };

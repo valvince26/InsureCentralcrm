@@ -4,6 +4,7 @@ import React, { useState, useEffect, useTransition } from "react";
 import { getOrganizationUsers, updateUserRole, deleteUser } from "../actions/user.actions";
 import InviteUserModal from "./InviteUserModal";
 import EditUserModal from "./EditUserModal";
+import { useUiStore } from "@/store/uiStore";
 
 export default function UserPermissions() {
   const [loading, setLoading] = useState(true);
@@ -11,6 +12,7 @@ export default function UserPermissions() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [isPending, startTransition] = useTransition();
+  const { showAlert, showConfirm } = useUiStore();
 
   useEffect(() => {
     getOrganizationUsers().then((data) => {
@@ -20,24 +22,26 @@ export default function UserPermissions() {
   }, []);
 
   const handleRoleChange = async (userId: string, role: string) => {
-    if (!confirm(`Are you sure you want to change this user's role to ${role}?`)) return;
+    const confirmed = await showConfirm(`Are you sure you want to change this user's role to ${role}?`);
+    if (!confirmed) return;
     try {
       await updateUserRole(userId, role as any);
       setUsers(users.map(u => u.id === userId ? { ...u, role } : u));
     } catch (err: any) {
-      alert(err.message);
+      showAlert(err.message);
     }
   };
 
-  const handleDeleteUser = (userId: string, userName: string) => {
-    if (!confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) return;
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    const confirmed = await showConfirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`);
+    if (!confirmed) return;
     
     startTransition(async () => {
       try {
         await deleteUser(userId);
         setUsers(users.filter(u => u.id !== userId));
       } catch (err: any) {
-        alert(err.message);
+        showAlert(err.message);
       }
     });
   };

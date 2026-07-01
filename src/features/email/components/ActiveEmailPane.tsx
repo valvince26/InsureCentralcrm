@@ -167,8 +167,7 @@ export default function ActiveEmailPane({ thread }: { thread?: any }) {
                 {msg.direction === 'Outbound' && (
                   <div className="flex items-center gap-2 mb-4 text-label-md text-on-surface-variant">
                     <span className="material-symbols-outlined text-[16px]">reply</span>
-                    <strong>You</strong> {msg.status === 'Drafts' ? 'drafted' : 'replied'} on {new Date(msg.createdAt).toLocaleString()}
-                    {msg.status === 'Drafts' && <span className="px-2 py-0.5 bg-secondary/10 text-secondary rounded text-[10px] font-bold uppercase">Draft</span>}
+                    <strong>You</strong> replied on {new Date(msg.createdAt).toLocaleString()}
                   </div>
                 )}
                 <div 

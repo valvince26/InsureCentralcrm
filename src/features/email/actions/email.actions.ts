@@ -248,8 +248,7 @@ export async function saveEmailReplyDraft(threadId: string, body: string) {
       to: formattedTo,
       body,
       direction: "Outbound",
-      organizationId: user.organizationId,
-      status: "Drafts"
+      organizationId: user.organizationId
     }
   });
 

@@ -192,3 +192,69 @@ export async function assignTagToContacts(contactIds: string[], tagName: string)
     return { success: false, error: error.message };
   }
 }
+
+export async function getTags() {
+  try {
+    const user = await getSession();
+    return await prisma.tag.findMany({
+      where: { organizationId: user.organizationId },
+      orderBy: { name: 'asc' }
+    });
+  } catch (error) {
+    console.error("Failed to fetch tags:", error);
+    return [];
+  }
+}
+
+export async function createContact(data: { firstName: string; lastName?: string; email?: string; phone?: string; state?: string; source?: string; tagName?: string }) {
+  try {
+    const user = await getSession();
+    
+    let tagConnect = undefined;
+    if (data.tagName) {
+      let tag = await prisma.tag.findFirst({
+        where: { name: data.tagName, organizationId: user.organizationId }
+      });
+      if (!tag) {
+        tag = await prisma.tag.create({
+          data: { name: data.tagName, organizationId: user.organizationId }
+        });
+      }
+      tagConnect = { connect: { id: tag.id } };
+    }
+
+    const contact = await prisma.contact.create({
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phone: data.phone,
+        state: data.state,
+        source: data.source || "Manual Entry",
+        status: "New",
+        organizationId: user.organizationId,
+        assignedUserId: user.id,
+        tags: tagConnect
+      }
+    });
+
+    await bulkAssignLeads([contact.id]);
+
+    await prisma.auditLog.create({
+      data: {
+        action: "Contact Created",
+        entityType: "Contact",
+        entityId: contact.id,
+        details: JSON.stringify({ source: data.source || "Manual Entry" }),
+        userId: user.id,
+        organizationId: user.organizationId
+      }
+    });
+
+    revalidatePath("/contacts");
+    return { success: true, contact };
+  } catch (error: any) {
+    console.error("Failed to create contact:", error);
+    return { success: false, error: error.message };
+  }
+}

@@ -144,8 +144,29 @@ export async function updateEmailThreadStatus(threadId: string, status: string) 
   return { success: true };
 }
 
-export async function createEmailThread(contactId: string, subject: string, body: string) {
+export async function createEmailThread(contactIdOrEmail: string, subject: string, body: string) {
   const user = await getAuthUser();
+
+  let contactId = contactIdOrEmail;
+
+  if (contactIdOrEmail.includes('@')) {
+    // Check if contact exists by email
+    let contact = await prisma.contact.findFirst({
+      where: { email: contactIdOrEmail, organizationId: user.organizationId }
+    });
+    
+    if (!contact) {
+      contact = await prisma.contact.create({
+        data: {
+          firstName: contactIdOrEmail.split('@')[0],
+          email: contactIdOrEmail,
+          organizationId: user.organizationId,
+          source: "Email Compose"
+        }
+      });
+    }
+    contactId = contact.id;
+  }
 
   const thread = await prisma.emailThread.create({
     data: {

@@ -4,16 +4,34 @@ import React from "react";
 import { useCrmStore } from "@/store/crmStore";
 
 export default function ContactsTable() {
-  const { contacts, selectedIds, toggleSelection, selectAll, clearSelection, filters, page, rowsPerPage, setTotalFromAPI } = useCrmStore();
+  const { contacts, selectedIds, toggleSelection, selectAll, clearSelection, filters, advancedFilterGroups, page, rowsPerPage, setTotalFromAPI } = useCrmStore();
 
   const filteredContacts = React.useMemo(() => {
     return contacts.filter(c => {
       if (filters.state !== "All States" && c.state !== filters.state) return false;
       if (filters.owner !== "All Owners" && c.ownerName !== filters.owner) return false;
       if (filters.campaign !== "All Campaigns" && c.campaign !== filters.campaign) return false;
+      
+      if (advancedFilterGroups && advancedFilterGroups.length > 0) {
+        const passesAdvanced = advancedFilterGroups.every(group => {
+          if (!group.rules || group.rules.length === 0) return true;
+          const ruleResults = group.rules.map(rule => {
+            if (rule.field === 'Tag') {
+              const hasTag = c.tags?.some(t => t.name.toLowerCase() === rule.value.toLowerCase());
+              if (rule.operator === 'Is') return hasTag;
+              if (rule.operator === 'Is not') return !hasTag;
+              return true;
+            }
+            return true;
+          });
+          return group.logic === 'AND' ? ruleResults.every(r => r) : ruleResults.some(r => r);
+        });
+        if (!passesAdvanced) return false;
+      }
+      
       return true;
     });
-  }, [contacts, filters]);
+  }, [contacts, filters, advancedFilterGroups]);
 
   React.useEffect(() => {
     setTotalFromAPI(filteredContacts.length);
@@ -91,8 +109,19 @@ export default function ContactsTable() {
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full ${c.bgInitials} flex items-center justify-center ${c.textInitials} font-bold text-xs`}>{c.initials}</div>
-                    <div className="font-semibold text-on-surface">{c.name}</div>
+                    <div className={`w-8 h-8 rounded-full ${c.bgInitials} flex items-center justify-center ${c.textInitials} font-bold text-xs shrink-0`}>{c.initials}</div>
+                    <div>
+                      <div className="font-semibold text-on-surface">{c.name}</div>
+                      {c.tags && c.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {c.tags.map(t => (
+                            <span key={t.id} className="text-[9px] bg-surface-container-high border border-outline-variant text-on-surface-variant px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">
+                              {t.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </td>
                 <td className="py-4 px-4 text-on-surface-variant font-medium">{c.phone}</td>

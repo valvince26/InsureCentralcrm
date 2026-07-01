@@ -1,6 +1,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+export interface AdvancedFilterRule {
+  id: string;
+  field: string;
+  operator: string;
+  value: string;
+}
+
+export interface AdvancedFilterGroup {
+  id: string;
+  logic: 'AND' | 'OR';
+  rules: AdvancedFilterRule[];
+}
+
 export interface Contact {
   id: string;
   initials: string;
@@ -23,6 +36,7 @@ export interface Contact {
   lastCalled: string;
   followUp: string;
   followUpColor: string;
+  tags?: { id: string, name: string }[];
 }
 
 interface CrmState {
@@ -52,6 +66,10 @@ interface CrmState {
   // API total (server-side count, not in-memory array length)
   totalFromAPI: number;
   setTotalFromAPI: (total: number) => void;
+
+  // Advanced Filters
+  advancedFilterGroups: AdvancedFilterGroup[];
+  setAdvancedFilterGroups: (groups: AdvancedFilterGroup[]) => void;
 }
 
 const initialContacts: Contact[] = [
@@ -173,10 +191,12 @@ export const useCrmStore = create<CrmState>()(
       contacts: initialContacts,
       selectedIds: [],
       filters: { state: "All States", owner: "All Owners", campaign: "All Campaigns" },
+      advancedFilterGroups: [],
       page: 1,
       rowsPerPage: 10,
       totalFromAPI: 0,
       setTotalFromAPI: (totalFromAPI) => set({ totalFromAPI }),
+      setAdvancedFilterGroups: (groups) => set({ advancedFilterGroups: groups, page: 1 }),
       
       addContact: (contact) => 
         set((state) => ({ contacts: [contact, ...state.contacts] })),

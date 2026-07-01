@@ -32,7 +32,8 @@ export default async function ContactsPage() {
     disposition: c.disposition || "None",
     lastCalled: "Never", // Could map to c.callLogs if we included them
     followUp: "-",
-    followUpColor: "text-on-surface-variant"
+    followUpColor: "text-on-surface-variant",
+    tags: c.tags || []
   }));
 
   return (

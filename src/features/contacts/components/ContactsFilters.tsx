@@ -4,11 +4,13 @@ import React, { useTransition, useState } from "react";
 import { useCrmStore } from "@/store/crmStore";
 import { bulkDeleteContacts, assignTagToContacts } from "../actions/contacts.actions";
 import ContactActivitySlideOut from "./ContactActivitySlideOut";
+import AdvancedFiltersModal from "./AdvancedFiltersModal";
 
 export default function ContactsFilters() {
   const { filters, setFilter, selectedIds, clearSelection } = useCrmStore();
   const [isPending, startTransition] = useTransition();
   const [isActivityOpen, setIsActivityOpen] = useState(false);
+  const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
 
   const handleDelete = () => {
     if (selectedIds.length === 0) return alert("Select contacts first.");
@@ -94,9 +96,13 @@ export default function ContactsFilters() {
         <span className="material-symbols-outlined absolute right-2 top-1.5 text-[16px] pointer-events-none text-on-surface-variant">expand_more</span>
       </div>
       <div className="h-6 w-[1px] bg-outline-variant mx-1"></div>
-      <button className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant rounded-md text-xs font-medium hover:bg-surface-container-low cursor-pointer">
+      <button onClick={() => handleAction("Tags")} className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant rounded-md text-xs font-medium hover:bg-surface-container-low cursor-pointer">
         <span className="material-symbols-outlined text-[16px]">sell</span>
         Tags
+      </button>
+      <button onClick={() => setIsAdvancedFiltersOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 border border-outline-variant rounded-md text-xs font-medium hover:bg-surface-container-low cursor-pointer text-primary bg-primary/5 border-primary/20">
+        <span className="material-symbols-outlined text-[16px]">tune</span>
+        Advanced Filters
       </button>
       <div className="ml-auto flex items-center gap-2">
         <button 
@@ -125,6 +131,7 @@ export default function ContactsFilters() {
         </div>
       </div>
       <ContactActivitySlideOut isOpen={isActivityOpen} onClose={() => setIsActivityOpen(false)} />
+      <AdvancedFiltersModal isOpen={isAdvancedFiltersOpen} onClose={() => setIsAdvancedFiltersOpen(false)} />
     </div>
   );
 }

@@ -34,6 +34,7 @@ export async function getContacts() {
       include: {
         assignedUser: true,
         campaign: true,
+        tags: true,
       },
       orderBy: { createdAt: "desc" },
     });

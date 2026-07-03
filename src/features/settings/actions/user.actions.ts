@@ -4,6 +4,8 @@ import prisma from "@/lib/prisma";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
+import nodemailer from "nodemailer";
+import { SettingsService } from "@/lib/settings.service";
 
 async function getAuthUser() {
   const cookieStore = await cookies();
@@ -85,6 +87,37 @@ export async function inviteUser(email: string, firstName: string, lastName: str
         isActive: false // Mark as inactive until they sign in
       }
     });
+
+    // Send Invite Email
+    try {
+      const smtpConfig = await SettingsService.getSmtpConfig(admin.organizationId);
+      if (smtpConfig && smtpConfig.host && smtpConfig.username && smtpConfig.password) {
+        const transporter = nodemailer.createTransport({
+          host: smtpConfig.host,
+          port: parseInt(smtpConfig.port || "587"),
+          secure: smtpConfig.encryption === "ssl",
+          auth: {
+            user: smtpConfig.username,
+            pass: smtpConfig.password,
+          },
+        });
+
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://insure-centralcrm.vercel.app";
+        const inviteUrl = `${appUrl}/login`;
+
+        await transporter.sendMail({
+          from: `"${smtpConfig.displayName || 'Insure Central'}" <${smtpConfig.companyEmail || admin.email}>`,
+          to: email,
+          subject: "You've been invited to join Insure Central CRM",
+          html: `<p>Hello ${firstName},</p><p>You have been invited to join the team on Insure Central CRM. Please click <a href="${inviteUrl}">here</a> to sign in with your email and join the organization.</p>`,
+        });
+      } else {
+        console.warn("SMTP not configured. Invite email skipped.");
+      }
+    } catch (emailError) {
+      console.error("Failed to send invite email:", emailError);
+      // We don't throw here so the user is still created successfully
+    }
 
     revalidatePath("/settings");
     revalidatePath("/team");

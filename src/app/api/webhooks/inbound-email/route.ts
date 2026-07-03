@@ -3,14 +3,32 @@ import prisma from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData();
+    const contentType = req.headers.get("content-type") || "";
     
-    // Most email providers (like SendGrid Inbound Parse) use multipart/form-data
-    const from = formData.get("from") as string || "";
-    const to = formData.get("to") as string || "";
-    const subject = formData.get("subject") as string || "(No Subject)";
-    let html = formData.get("html") as string;
-    const text = formData.get("text") as string;
+    let from = "";
+    let to = "";
+    let subject = "(No Subject)";
+    let html = "";
+    let text = "";
+
+    if (contentType.includes("application/json")) {
+      // Resend sends a JSON payload
+      const data = await req.json();
+      from = data.from || "";
+      // Resend 'to' is usually an array
+      to = Array.isArray(data.to) ? data.to[0] : (data.to || "");
+      subject = data.subject || "(No Subject)";
+      html = data.html || "";
+      text = data.text || "";
+    } else {
+      // SendGrid sends multipart/form-data
+      const formData = await req.formData();
+      from = formData.get("from") as string || "";
+      to = formData.get("to") as string || "";
+      subject = formData.get("subject") as string || "(No Subject)";
+      html = formData.get("html") as string || "";
+      text = formData.get("text") as string || "";
+    }
     
     // Fallback to plain text if HTML is not provided
     if (!html && text) {

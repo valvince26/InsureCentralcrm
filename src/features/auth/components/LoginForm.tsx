@@ -14,17 +14,10 @@ export default function LoginForm() {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    // Get the absolute base URL based on environment variables or fallback to window.location.origin
-    const getBaseUrl = () => {
-      if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-      if (process.env.NEXT_PUBLIC_VERCEL_URL) return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
-      return window.location.origin;
-    };
-
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${getBaseUrl()}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
   };

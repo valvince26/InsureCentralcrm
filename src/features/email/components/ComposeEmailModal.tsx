@@ -126,9 +126,14 @@ export default function ComposeEmailModal({ isOpen, onClose }: { isOpen: boolean
                       <div 
                         key={c.id} 
                         className="px-4 py-2 hover:bg-surface-container-low cursor-pointer flex justify-between items-center"
-                        onClick={() => handleSelectContact(c.id, c.email || '', `${c.firstName} ${c.lastName}`)}
+                        onClick={() => {
+                          const fullName = [c.firstName, c.lastName].filter(Boolean).join(" ");
+                          handleSelectContact(c.id, c.email || '', fullName);
+                        }}
                       >
-                        <span className="font-medium text-on-surface text-sm">{c.firstName} {c.lastName}</span>
+                        <span className="font-medium text-on-surface text-sm">
+                          {[c.firstName, c.lastName].filter(Boolean).join(" ")}
+                        </span>
                         <span className="text-on-surface-variant text-xs">{c.email}</span>
                       </div>
                     ))

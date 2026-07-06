@@ -81,7 +81,7 @@ export async function sendEmail(threadId: string, body: string) {
   const transporter = nodemailer.createTransport({
     host: smtpConfig.host,
     port: parseInt(smtpConfig.port || "587"),
-    secure: smtpConfig.encryption === "ssl", // true for 465, false for other ports
+    secure: parseInt(smtpConfig.port || "587") === 465 || smtpConfig.encryption === "ssl",
     auth: {
       user: smtpConfig.username,
       pass: smtpConfig.password, // This is decrypted by SettingsService!
@@ -150,16 +150,23 @@ export async function createEmailThread(contactIdOrEmail: string, subject: strin
   let contactId = contactIdOrEmail;
 
   if (contactIdOrEmail.includes('@')) {
+    // Extract just the email if it's in format "Name <email@domain.com>"
+    const emailMatch = contactIdOrEmail.match(/<([^>]+)>/);
+    const rawEmail = emailMatch ? emailMatch[1].trim() : contactIdOrEmail.trim();
+
     // Check if contact exists by email
     let contact = await prisma.contact.findFirst({
-      where: { email: contactIdOrEmail, organizationId: user.organizationId }
+      where: { email: rawEmail, organizationId: user.organizationId }
     });
     
     if (!contact) {
+      const nameParts = contactIdOrEmail.split('<')[0].trim();
+      const firstName = nameParts || rawEmail.split('@')[0];
+
       contact = await prisma.contact.create({
         data: {
-          firstName: contactIdOrEmail.split('@')[0],
-          email: contactIdOrEmail,
+          firstName: firstName,
+          email: rawEmail,
           organizationId: user.organizationId,
           source: "Email Compose"
         }
@@ -187,15 +194,21 @@ export async function saveEmailDraft(contactIdOrEmail: string, subject: string, 
   let contactId = contactIdOrEmail;
 
   if (contactIdOrEmail.includes('@')) {
+    const emailMatch = contactIdOrEmail.match(/<([^>]+)>/);
+    const rawEmail = emailMatch ? emailMatch[1].trim() : contactIdOrEmail.trim();
+
     let contact = await prisma.contact.findFirst({
-      where: { email: contactIdOrEmail, organizationId: user.organizationId }
+      where: { email: rawEmail, organizationId: user.organizationId }
     });
     
     if (!contact) {
+      const nameParts = contactIdOrEmail.split('<')[0].trim();
+      const firstName = nameParts || rawEmail.split('@')[0];
+
       contact = await prisma.contact.create({
         data: {
-          firstName: contactIdOrEmail.split('@')[0],
-          email: contactIdOrEmail,
+          firstName: firstName,
+          email: rawEmail,
           organizationId: user.organizationId,
           source: "Email Compose"
         }

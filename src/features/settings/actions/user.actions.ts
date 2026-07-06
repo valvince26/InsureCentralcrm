@@ -95,7 +95,7 @@ export async function inviteUser(email: string, firstName: string, lastName: str
         const transporter = nodemailer.createTransport({
           host: smtpConfig.host,
           port: parseInt(smtpConfig.port || "587"),
-          secure: smtpConfig.encryption === "ssl",
+          secure: parseInt(smtpConfig.port || "587") === 465 || smtpConfig.encryption === "ssl",
           auth: {
             user: smtpConfig.username,
             pass: smtpConfig.password,

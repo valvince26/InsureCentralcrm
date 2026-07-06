@@ -145,47 +145,52 @@ export async function updateEmailThreadStatus(threadId: string, status: string) 
 }
 
 export async function createEmailThread(contactIdOrEmail: string, subject: string, body: string) {
-  const user = await getAuthUser();
+  try {
+    const user = await getAuthUser();
 
-  let contactId = contactIdOrEmail;
+    let contactId = contactIdOrEmail;
 
-  if (contactIdOrEmail.includes('@')) {
-    // Extract just the email if it's in format "Name <email@domain.com>"
-    const emailMatch = contactIdOrEmail.match(/<([^>]+)>/);
-    const rawEmail = emailMatch ? emailMatch[1].trim() : contactIdOrEmail.trim();
+    if (contactIdOrEmail.includes('@')) {
+      // Extract just the email if it's in format "Name <email@domain.com>"
+      const emailMatch = contactIdOrEmail.match(/<([^>]+)>/);
+      const rawEmail = emailMatch ? emailMatch[1].trim() : contactIdOrEmail.trim();
 
-    // Check if contact exists by email
-    let contact = await prisma.contact.findFirst({
-      where: { email: rawEmail, organizationId: user.organizationId }
-    });
-    
-    if (!contact) {
-      const nameParts = contactIdOrEmail.split('<')[0].trim();
-      const firstName = nameParts || rawEmail.split('@')[0];
-
-      contact = await prisma.contact.create({
-        data: {
-          firstName: firstName,
-          email: rawEmail,
-          organizationId: user.organizationId,
-          source: "Email Compose"
-        }
+      // Check if contact exists by email
+      let contact = await prisma.contact.findFirst({
+        where: { email: rawEmail, organizationId: user.organizationId }
       });
+      
+      if (!contact) {
+        const nameParts = contactIdOrEmail.split('<')[0].trim();
+        const firstName = nameParts || rawEmail.split('@')[0];
+
+        contact = await prisma.contact.create({
+          data: {
+            firstName: firstName,
+            email: rawEmail,
+            organizationId: user.organizationId,
+            source: "Email Compose"
+          }
+        });
+      }
+      contactId = contact.id;
     }
-    contactId = contact.id;
+
+    const thread = await prisma.emailThread.create({
+      data: {
+        subject,
+        contactId,
+        userId: user.id,
+        organizationId: user.organizationId,
+        status: "Sent"
+      }
+    });
+
+    return await sendEmail(thread.id, body);
+  } catch (error: any) {
+    console.error("Critical error in createEmailThread:", error);
+    return { success: false, error: "Critical error: " + (error.message || String(error)) };
   }
-
-  const thread = await prisma.emailThread.create({
-    data: {
-      subject,
-      contactId,
-      userId: user.id,
-      organizationId: user.organizationId,
-      status: "Sent"
-    }
-  });
-
-  return await sendEmail(thread.id, body);
 }
 
 export async function saveEmailDraft(contactIdOrEmail: string, subject: string, body: string) {

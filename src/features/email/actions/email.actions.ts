@@ -89,9 +89,9 @@ export async function sendEmail(threadId: string, body: string) {
   });
 
   const fromEmail = smtpConfig.companyEmail || user.email;
-  const fromName = smtpConfig.displayName || `${user.firstName} ${user.lastName}`;
+  const fromName = smtpConfig.displayName || [user.firstName, user.lastName].filter(Boolean).join(" ");
   const formattedFrom = `${fromName} <${fromEmail}>`;
-  const formattedTo = `${thread.contact.firstName} ${thread.contact.lastName} <${thread.contact.email}>`;
+  const formattedTo = `${[thread.contact.firstName, thread.contact.lastName].filter(Boolean).join(" ")} <${thread.contact.email}>`;
 
   // Actually transmit the email
   try {

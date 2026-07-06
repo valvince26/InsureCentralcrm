@@ -57,7 +57,13 @@ export default function ComposeEmailModal({ isOpen, onClose }: { isOpen: boolean
     startTransition(async () => {
       try {
         const bodyText = `<p>${body.replace(/\n/g, '<br/>')}</p>`;
-        await createEmailThread(finalContact, subject, bodyText);
+        const result = await createEmailThread(finalContact, subject, bodyText);
+        
+        if (result && !result.success) {
+          showAlert(result.error || "Failed to send email.");
+          return;
+        }
+
         showAlert("Email sent!");
         setSubject("");
         setBody("");

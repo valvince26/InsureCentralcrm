@@ -68,13 +68,13 @@ export async function sendEmail(threadId: string, body: string) {
     include: { contact: true }
   });
 
-  if (!thread) throw new Error("Thread not found");
+  if (!thread) return { success: false, error: "Thread not found" };
 
   // Fetch SMTP Configuration
   const smtpConfig = await SettingsService.getSmtpConfig(user.organizationId);
   
   if (!smtpConfig || !smtpConfig.host || !smtpConfig.username || !smtpConfig.password) {
-    throw new Error("SMTP is not configured properly in Settings.");
+    return { success: false, error: "SMTP is not configured properly in Settings." };
   }
 
   // Set up Nodemailer Transporter
@@ -105,7 +105,7 @@ export async function sendEmail(threadId: string, body: string) {
     });
   } catch (error: any) {
     console.error("Failed to send email via SMTP:", error);
-    throw new Error("Failed to send email. Check your SMTP settings. Details: " + error.message);
+    return { success: false, error: "Failed to send email. Check your SMTP settings. Details: " + error.message };
   }
 
   // Save to Database after successful transmission
@@ -185,7 +185,7 @@ export async function createEmailThread(contactIdOrEmail: string, subject: strin
     }
   });
 
-  return sendEmail(thread.id, body);
+  return await sendEmail(thread.id, body);
 }
 
 export async function saveEmailDraft(contactIdOrEmail: string, subject: string, body: string) {

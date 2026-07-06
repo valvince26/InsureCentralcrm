@@ -3,6 +3,7 @@ import EmailLayout from "@/features/email/components/EmailLayout";
 import EmailFolders from "@/features/email/components/EmailFolders";
 import EmailList from "@/features/email/components/EmailList";
 import ActiveEmailPane from "@/features/email/components/ActiveEmailPane";
+import EmailRealtimeRefresher from "@/features/email/components/EmailRealtimeRefresher";
 import { getEmailThreads } from "@/features/email/actions/email.actions";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function EmailPage({ searchParams }: { searchParams: Promis
 
     return (
       <EmailLayout>
+        <EmailRealtimeRefresher />
         <EmailFolders unreadCount={unreadCount} currentFolder={folder} />
         <EmailList threads={threads} activeId={activeThreadId} folder={folder} />
         <ActiveEmailPane thread={activeThread} />

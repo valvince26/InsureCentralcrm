@@ -12,7 +12,6 @@ export async function POST(req: Request) {
     let text = "";
 
     if (contentType.includes("application/json")) {
-      // Resend sends a JSON payload
       const payload = await req.json();
       const data = payload.data || payload;
       
@@ -20,8 +19,10 @@ export async function POST(req: Request) {
       // Resend 'to' is usually an array
       to = Array.isArray(data.to) ? data.to[0] : (data.to || "");
       subject = data.subject || "(No Subject)";
-      html = data.html || "";
-      text = data.text || "";
+      
+      // Resend uses html_body and text_body for inbound emails!
+      html = data.html || data.html_body || data.body || `<pre>Body not found. Raw data: ${JSON.stringify(data, null, 2)}</pre>`;
+      text = data.text || data.text_body || "";
     } else {
       // SendGrid sends multipart/form-data
       const formData = await req.formData();

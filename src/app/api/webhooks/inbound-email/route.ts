@@ -13,7 +13,9 @@ export async function POST(req: Request) {
 
     if (contentType.includes("application/json")) {
       // Resend sends a JSON payload
-      const data = await req.json();
+      const payload = await req.json();
+      const data = payload.data || payload;
+      
       from = data.from || "";
       // Resend 'to' is usually an array
       to = Array.isArray(data.to) ? data.to[0] : (data.to || "");

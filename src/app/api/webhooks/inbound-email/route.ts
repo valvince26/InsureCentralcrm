@@ -11,20 +11,19 @@ export async function POST(req: Request) {
     let html = "";
     let text = "";
 
+    let emailId = "";
+
     if (contentType.includes("application/json")) {
       const payload = await req.json();
       const data = payload.data || payload;
       
       from = data.from || "";
-      // Resend 'to' is usually an array
       to = Array.isArray(data.to) ? data.to[0] : (data.to || "");
       subject = data.subject || "(No Subject)";
-      
-      // Resend uses html_body and text_body for inbound emails!
-      html = data.html || data.html_body || data.body || `<pre>Body not found. Raw data: ${JSON.stringify(data, null, 2)}</pre>`;
+      emailId = data.email_id || "";
+      html = data.html || data.html_body || data.body || "";
       text = data.text || data.text_body || "";
     } else {
-      // SendGrid sends multipart/form-data
       const formData = await req.formData();
       from = formData.get("from") as string || "";
       to = formData.get("to") as string || "";
@@ -33,14 +32,6 @@ export async function POST(req: Request) {
       text = formData.get("text") as string || "";
     }
     
-    // Fallback to plain text if HTML is not provided
-    if (!html && text) {
-      html = `<p>${text.replace(/\\n/g, '<br/>')}</p>`;
-    } else if (!html) {
-      html = "<p></p>";
-    }
-    
-    // Parse out email addresses from "Name <email@domain.com>" format
     const extractEmail = (str: string) => {
       const match = str.match(/<([^>]+)>/);
       return match ? match[1].toLowerCase() : str.trim().toLowerCase();
@@ -53,8 +44,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing from/to email" }, { status: 400 });
     }
 
-    // Try to find the organization/user based on the "to" email. 
-    // Usually, the CRM user's email is the "toEmail" (if they hit reply).
     let user = await prisma.user.findFirst({
       where: { email: { equals: toEmail, mode: "insensitive" } }
     });
@@ -62,15 +51,12 @@ export async function POST(req: Request) {
     let organizationId = user?.organizationId;
 
     if (!organizationId) {
-      // Fallback: Check if the "fromEmail" belongs to a known Contact.
-      // If it does, we assume the email is meant for that Contact's organization.
       const contact = await prisma.contact.findFirst({
         where: { email: { equals: fromEmail, mode: "insensitive" } }
       });
       
       if (contact) {
         organizationId = contact.organizationId;
-        // Grab a default user for that org (e.g. the contact's assigned user)
         user = await prisma.user.findFirst({ 
           where: { id: contact.assignedUserId || undefined, organizationId }
         });
@@ -83,6 +69,40 @@ export async function POST(req: Request) {
     if (!organizationId) {
       console.warn("Could not find organization for inbound email", { toEmail, fromEmail });
       return NextResponse.json({ success: true, message: "Ignored: No matching organization found for these addresses." });
+    }
+
+    // IMPORTANT: Resend webhook payloads do NOT contain the email body! 
+    // We must fetch it using the email_id and the organization's Resend API Key.
+    if (emailId && !html && !text) {
+      try {
+        const { SettingsService } = require("@/lib/settings.service");
+        const smtpConfig = await SettingsService.getSmtpConfig(organizationId);
+        
+        if (smtpConfig && smtpConfig.password) {
+          const res = await fetch(`https://api.resend.com/emails/${emailId}`, {
+            headers: {
+              'Authorization': `Bearer ${smtpConfig.password}`
+            }
+          });
+          
+          if (res.ok) {
+            const emailData = await res.json();
+            html = emailData.html || "";
+            text = emailData.text || "";
+          } else {
+            console.error("Failed to fetch full email from Resend", await res.text());
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching Resend email body", err);
+      }
+    }
+
+    // Fallback to plain text if HTML is not provided
+    if (!html && text) {
+      html = `<p>${text.replace(/\n/g, '<br/>')}</p>`;
+    } else if (!html) {
+      html = "<p></p>";
     }
 
     // Find or Create the contact sending the email

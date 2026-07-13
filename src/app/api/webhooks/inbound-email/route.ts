@@ -153,6 +153,23 @@ export async function POST(req: Request) {
       });
     }
 
+    // Prevent duplicate webhook events from inserting duplicate messages
+    const recentDuplicate = await prisma.emailMessage.findFirst({
+      where: {
+        threadId: thread.id,
+        direction: "Inbound",
+        body: html,
+        createdAt: {
+          gte: new Date(Date.now() - 60000) // Within the last 60 seconds
+        }
+      }
+    });
+
+    if (recentDuplicate) {
+      console.log("Ignored duplicate webhook payload for thread", thread.id);
+      return NextResponse.json({ success: true, message: "Ignored duplicate" });
+    }
+
     // Insert the new Message into the Database
     await prisma.emailMessage.create({
       data: {

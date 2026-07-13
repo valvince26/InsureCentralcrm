@@ -108,25 +108,30 @@ export async function sendEmail(threadId: string, body: string) {
     return { success: false, error: "Failed to send email. Check your SMTP settings. Details: " + error.message };
   }
 
-  // Save to Database after successful transmission
-  await prisma.emailMessage.create({
-    data: {
-      threadId: thread.id,
-      from: formattedFrom,
-      to: formattedTo,
-      body,
-      direction: "Outbound",
-      organizationId: user.organizationId
-    }
-  });
+  try {
+    // Save to Database after successful transmission
+    await prisma.emailMessage.create({
+      data: {
+        threadId: thread.id,
+        from: formattedFrom,
+        to: formattedTo,
+        body,
+        direction: "Outbound",
+        organizationId: user.organizationId
+      }
+    });
 
-  await prisma.emailThread.update({
-    where: { id: threadId },
-    data: { lastActivityAt: new Date() }
-  });
+    await prisma.emailThread.update({
+      where: { id: threadId },
+      data: { lastActivityAt: new Date() }
+    });
 
-  revalidatePath("/email");
-  return { success: true };
+    revalidatePath("/email");
+    return { success: true };
+  } catch (err: any) {
+    console.error("Database error saving email:", err);
+    return { success: false, error: "Database error: " + err.message };
+  }
 }
 
 export async function updateEmailThreadStatus(threadId: string, status: string) {

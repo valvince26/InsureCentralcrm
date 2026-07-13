@@ -34,7 +34,7 @@ export default function ActiveEmailPane({ thread }: { thread?: any }) {
   const handleSend = async () => {
     if (!replyText.trim() || !thread) return;
     
-    const bodyText = `<p>${replyText.replace(/\\n/g, '<br/>')}</p>`;
+    const bodyText = `<p>${replyText.replace(/\n/g, '<br/>')}</p>`;
     
     // Optimistic UI
     const tempMsg = {
@@ -49,14 +49,23 @@ export default function ActiveEmailPane({ thread }: { thread?: any }) {
     setIsReplying(false);
 
     try {
-      await sendEmail(thread.id, bodyText);
+      const result = await sendEmail(thread.id, bodyText);
+      if (result && !result.success) {
+        alert("Failed to send email: " + result.error);
+        // Remove optimistic message
+        setMessages(prev => prev.filter(m => m.id !== tempMsg.id));
+        return;
+      }
+
       const updated = await getEmailMessages(thread.id);
       setMessages(updated);
       setTimeout(() => {
         scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
       }, 100);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      alert("An unexpected error occurred: " + e.message);
+      setMessages(prev => prev.filter(m => m.id !== tempMsg.id));
     }
   };
 

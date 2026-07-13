@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { SettingsService } from "@/lib/settings.service";
 
 export async function POST(req: Request) {
   try {
@@ -75,11 +76,10 @@ export async function POST(req: Request) {
     // We must fetch it using the email_id and the organization's Resend API Key.
     if (emailId && !html && !text) {
       try {
-        const { SettingsService } = require("@/lib/settings.service");
         const smtpConfig = await SettingsService.getSmtpConfig(organizationId);
         
         if (smtpConfig && smtpConfig.password) {
-          const res = await fetch(`https://api.resend.com/emails/${emailId}`, {
+          const res = await fetch(`https://api.resend.com/emails/receiving/${emailId}`, {
             headers: {
               'Authorization': `Bearer ${smtpConfig.password}`
             }
